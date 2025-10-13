@@ -11,48 +11,15 @@ import { LoginComponent } from './authentication/login/login.component';
 // import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  {
-    path: '',
-    redirectTo: '/login',
-    pathMatch: 'full',
-  },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-  // AuthGuard pruebas, descomenta Mitma prox..
-  {
-    path: 'login',
-    component: LoginComponent,
-  },
+  { path: 'dashboard', component: DashboardComponent },
 
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    // , canActivate: [AuthGuard]
-  },
+  { path: 'login', component: LoginComponent },
+  { path: 'rooms', component: RoomListComponent },
+  { path: 'reservations', component: ReservationListComponent },
+  { path: 'guests', component: GuestListComponent },
+  { path: 'checkin', component: TodayActivitiesComponent },
 
-  {
-    path: 'rooms',
-    component: RoomListComponent,
-    // , canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'reservations',
-    component: ReservationListComponent,
-    // , canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'guests',
-    component: GuestListComponent,
-    // , canActivate: [AuthGuard]
-  },
-
-  {
-    path: 'checkin',
-    component: TodayActivitiesComponent,
-    // , canActivate: [AuthGuard]
-  },
-
-  // Ruta no encontrada
-  { path: '**', redirectTo: '/login' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

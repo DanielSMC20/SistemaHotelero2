@@ -24,10 +24,15 @@ interface Guest {
   styleUrls: ['./guest-list.component.css'],
 })
 export class GuestListComponent implements OnInit {
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   columnDefs: ColDef<Guest>[] = [
-    { headerName: 'ID', field: 'id', width: 80, cellStyle: { 'text-align': 'center' } },
+    {
+      headerName: 'ID',
+      field: 'id',
+      width: 80,
+      cellStyle: { 'text-align': 'center' },
+    },
     { headerName: 'Nombres y apellidos', field: 'nombre' },
     { headerName: 'DNI', field: 'dni' },
     { headerName: 'Teléfono', field: 'telefono' },
@@ -43,14 +48,16 @@ export class GuestListComponent implements OnInit {
 
         const editBtn = document.createElement('button');
         editBtn.innerText = 'Editar';
-        editBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-sm transition-all duration-200';
+        editBtn.className =
+          'bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-sm transition-all duration-200';
         editBtn.addEventListener('click', () => {
           params.context.componentParent.editar(params.data);
         });
 
         const deleteBtn = document.createElement('button');
         deleteBtn.innerText = 'Eliminar';
-        deleteBtn.className = 'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-sm transition-all duration-200';
+        deleteBtn.className =
+          'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-sm transition-all duration-200';
         deleteBtn.addEventListener('click', () => {
           params.context.componentParent.eliminar();
         });
@@ -61,9 +68,7 @@ export class GuestListComponent implements OnInit {
       },
       width: 230,
       cellStyle: { 'text-align': 'center' },
-    }
-
-
+    },
   ];
 
   rowData: Guest[] = [
@@ -75,7 +80,7 @@ export class GuestListComponent implements OnInit {
       email: 'espinosaul2003@gmail.com',
       fechaRegistro: '11/10/2025',
     },
-     {
+    {
       id: 2,
       nombre: 'Andrea Sayritupac Ruiz',
       dni: '8784284',
@@ -85,9 +90,8 @@ export class GuestListComponent implements OnInit {
     },
   ];
   gridOptions = {
-    context: { componentParent: this }
+    context: { componentParent: this },
   };
-
 
   editar(guest: Guest) {
     Swal.fire({
@@ -116,10 +120,18 @@ export class GuestListComponent implements OnInit {
       </div>
     `,
       preConfirm: () => {
-        const nombre = (document.getElementById('nombre') as HTMLInputElement).value.trim();
-        const dni = (document.getElementById('dni') as HTMLInputElement).value.trim();
-        const telefono = (document.getElementById('telefono') as HTMLInputElement).value.trim();
-        const email = (document.getElementById('email') as HTMLInputElement).value.trim();
+        const nombre = (
+          document.getElementById('nombre') as HTMLInputElement
+        ).value.trim();
+        const dni = (
+          document.getElementById('dni') as HTMLInputElement
+        ).value.trim();
+        const telefono = (
+          document.getElementById('telefono') as HTMLInputElement
+        ).value.trim();
+        const email = (
+          document.getElementById('email') as HTMLInputElement
+        ).value.trim();
 
         if (!nombre || !dni || !telefono || !email) {
           Swal.showValidationMessage('⚠️ Todos los campos son obligatorios');
@@ -127,7 +139,7 @@ export class GuestListComponent implements OnInit {
         }
 
         return { nombre, dni, telefono, email };
-      }
+      },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
         guest.nombre = result.value.nombre;
@@ -140,45 +152,43 @@ export class GuestListComponent implements OnInit {
           title: '¡Actualizado!',
           text: 'Los datos del huésped fueron actualizados correctamente.',
           showConfirmButton: false,
-          timer: 1500
+          timer: 1500,
         });
       }
     });
   }
 
-
   eliminar() {
     const swalWithBootstrapButtons = Swal.mixin({
       customClass: {
-        confirmButton: "btn btn-success",
-        cancelButton: "btn btn-danger"
+        confirmButton: 'btn btn-success',
+        cancelButton: 'btn btn-danger',
       },
-      buttonsStyling: true
+      buttonsStyling: true,
     });
-    swalWithBootstrapButtons.fire({
-      title: "¿Estas seguro de eliminar este usuario?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Si, eliminar",
-      cancelButtonText: "No, cancelar!",
-      
-      reverseButtons: true
-    }).then((result) => {
-      if (result.isConfirmed) {
-        swalWithBootstrapButtons.fire({
-          title: "Elinado!",
-          text: "El usuario se ha eliminado",
-          icon: "success"
-        });
-      } else if (
-        /* Read more about handling dismissals below */
-        result.dismiss === Swal.DismissReason.cancel
-      ) {
-        swalWithBootstrapButtons.fire({
-          title: "Cancelado",
-          icon: "error"
-        });
-      }
-    });
+    swalWithBootstrapButtons
+      .fire({
+        title: '¿Estas seguro de eliminar este usuario?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Si, eliminar',
+        cancelButtonText: 'No, cancelar!',
+
+        reverseButtons: true,
+      })
+      .then((result) => {
+        if (result.isConfirmed) {
+          swalWithBootstrapButtons.fire({
+            title: 'Elinado!',
+            text: 'El usuario se ha eliminado',
+            icon: 'success',
+          });
+        } // else if (result?.dismiss == Swal.DismissReason.cancel) {
+        //   swalWithBootstrapButtons.fire({
+        //     title: 'Cancelado',
+        //     icon: 'error',
+        //   });
+        // }
+      });
   }
 }

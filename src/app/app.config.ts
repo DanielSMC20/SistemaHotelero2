@@ -6,7 +6,6 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import { routes } from './app.routes';
 
-// Importar servicios
 import { AuthService } from './core/services/auth.service';
 import { ApiService } from './core/services/api.service';
 import { HotelService } from './core/services/hotel.service';
@@ -16,14 +15,12 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
 
-    // Módulos
     importProvidersFrom(
       BrowserAnimationsModule,
       HttpClientModule,
       ReactiveFormsModule
     ),
 
-    // Servicios (ya están en 'root' pero los registramos explícitamente)
     AuthService,
     ApiService,
     HotelService,
