@@ -27,7 +27,7 @@ export class RoomListComponent implements OnInit {
   }
 
   loadRooms(): void {
-    this.loading = true;s
+    this.loading = true;
     this.error = null;
 
     setTimeout(() => {
