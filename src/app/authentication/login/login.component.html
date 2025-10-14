@@ -22,7 +22,7 @@
           <div class="flex items-center justify-between mb-2">
             <label for="password" class="block text-sm font-medium">Contraseña</label>
             <a class="text-sm text-indigo-400 hover:text-indigo-300 font-medium" href="#"
-              (click)="showTestCredentials(); $event.preventDefault()">¿Olvidaste tu contraseña?</a>
+              (click)="onSubmit(); $event.preventDefault()">¿Olvidaste tu contraseña?</a>
           </div>
           <div class="relative">
             <input id="password" type="password" autocomplete="current-password"
@@ -103,7 +103,7 @@
         </div>
 
         <div class="text-center">
-          <button type="button" (click)="showTestCredentials()" class="w-full py-2.5 px-4 border border-slate-700 rounded-xl text-sm font-medium
+          <button type="button" class="w-full py-2.5 px-4 border border-slate-700 rounded-xl text-sm font-medium
                    text-slate-300 hover:bg-slate-800/50 focus:outline-none focus:ring-2
                    focus:ring-indigo-500/40 transition-colors">
             👤 Mostrar usuarios de prueba

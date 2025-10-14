@@ -1,102 +1,72 @@
+// src/app/core/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { map, catchError } from 'rxjs/operators';
+import { BehaviorSubject, catchError, map, Observable, of, tap } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AuthUser } from '../models/models';
+import { Rol } from '../models/enums';
+import { env } from '../environments/environment'; 
 
-export interface User {
-  id: number;
+
+const API = env.API_AUTH;
+export interface LoginRequest {
   username: string;
-  email: string;
-  role: 'admin' | 'receptionist' | 'manager';
-  fullName: string;
+  password: string;
 }
 
 export interface LoginResponse {
-  user: User;
   token: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+    fullName: string;
+  };
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = 'api/auth';
-  public currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser$: Observable<User | null>;
+  [x: string]: any;
+  private currentUserSubject = new BehaviorSubject<LoginResponse['user'] | null>(null);
+  currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(private http: HttpClient) {
     const storedUser = localStorage.getItem('currentUser');
-    this.currentUserSubject = new BehaviorSubject<User | null>(
-      storedUser ? JSON.parse(storedUser) : null
-    );
-    this.currentUser$ = this.currentUserSubject.asObservable();
+    if (storedUser) this.currentUserSubject.next(JSON.parse(storedUser));
   }
+  get currentUser() {
+  return this.currentUserSubject.value;
+}
 
-  get currentUser(): User | null {
-    return this.currentUserSubject.value;
-  }
-
-  get isAuthenticated(): boolean {
-    return !!this.currentUser;
-  }
-
-  get isAdmin(): boolean {
-    return this.isAuthenticated && this.currentUser?.role === 'admin';
-  }
 
   login(username: string, password: string): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${this.API_URL}/login`, {
-        username,
-        password,
+      .post<LoginResponse>(`${API}/login`, { username, password }, {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
       })
       .pipe(
-        map((response) => {
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
+        tap((response) => {
           localStorage.setItem('token', response.token);
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
           this.currentUserSubject.next(response.user);
-          return response;
-        }),
-        catchError((error) => {
-          console.error('Error en login:', error);
-          throw error;
         })
       );
   }
 
-  loginDemo(userData: User, token: string): void {
-    console.log('AuthService: loginDemo ejecutado para:', userData.username);
-    localStorage.setItem('currentUser', JSON.stringify(userData));
-    localStorage.setItem('token', token);
-    this.currentUserSubject.next(userData);
-    console.log('AuthService: Usuario seteado:', this.currentUser);
-    console.log('AuthService: isAuthenticated:', this.isAuthenticated);
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  get isAuthenticated(): boolean {
+    return !!this.getToken();
   }
 
   logout(): void {
-    localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
-  }
-
-  checkToken(): Observable<boolean> {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      return of(false);
-    }
-
-    return this.http
-      .get<{ valid: boolean }>(`${this.API_URL}/verify`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .pipe(
-        map((response) => response.valid),
-        catchError(() => {
-          this.logout();
-          return of(false);
-        })
-      );
   }
 }

@@ -38,9 +38,9 @@ export class GuestListComponent implements OnInit {
 
   columnDefs: ColDef<Guest>[] = [
     {headerName: 'ID',field: 'id', width: 80,cellStyle: { 'text-align': 'center' }, },
-    { headerName: 'Nombres y apellidos', field: 'name' },
-    { headerName: 'DNI', field: 'dni' },
-    { headerName: 'Teléfono', field: 'phone' },
+    { headerName: 'Nombres y apellidos', field: 'nombresCompletos' },
+    { headerName: 'DNI', field: 'documento' },
+    { headerName: 'Teléfono', field: 'telefono' },
     { headerName: 'Email', field: 'email' },
     {
       headerName: 'Acciones',
@@ -78,17 +78,17 @@ export class GuestListComponent implements OnInit {
   rowData: Guest[] = [
     {
       id: 1,
-      name: 'Saul Espino Carhuayo ',
-      dni: '72848724',
-      phone: '950788996',
+      nombresCompletos: 'Saul Espino Carhuayo ',
+      documento: '72848724',
+      telefono: '950788996',
       email: 'espinosaul2003@gmail.com',
 
     },
     {
-      id: 2,
-      name: 'Andrea Sayritupac Ruiz',
-      dni: '8784284',
-      phone: '65117865',
+     id: 2,
+      nombresCompletos: 'Andrea Sayritupac Ruiz',
+      documento: '8784284',
+      telefono: '65117865',
       email: 'cbuybc@gmail.com',
     },
   ];
@@ -110,13 +110,13 @@ export class GuestListComponent implements OnInit {
       html: `
       <div style="display:flex; flex-direction:column; gap:10px; text-align:left">
         <label><strong>Nombre completo</strong></label>
-        <input id="nombre" class="swal2-input" placeholder="Nombre" value="${guest.name}" style="width:100%">
+        <input id="nombre" class="swal2-input" placeholder="Nombre" value="${guest.nombresCompletos}" style="width:100%">
 
         <label><strong>DNI</strong></label>
-        <input id="dni" class="swal2-input" placeholder="DNI" value="${guest.dni}" style="width:100%">
+        <input id="dni" class="swal2-input" placeholder="DNI" value="${guest.documento}" style="width:100%">
 
         <label><strong>Teléfono</strong></label>
-        <input id="telefono" class="swal2-input" placeholder="Teléfono" value="${guest.phone}" style="width:100%">
+        <input id="telefono" class="swal2-input" placeholder="Teléfono" value="${guest.telefono}" style="width:100%">
 
         <label><strong>Email</strong></label>
         <input id="email" class="swal2-input" placeholder="Email" value="${guest.email}" style="width:100%">
@@ -145,10 +145,11 @@ export class GuestListComponent implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
-        guest.name = result.value.nombre;
-        guest.dni = result.value.dni;
-        guest.phone = result.value.telefono;
+        guest.nombresCompletos = result.value.nombre;
         guest.email = result.value.email;
+        guest.telefono = result.value.telefono;
+        guest.documento = result.value.dni;
+        
 
         Swal.fire({
           icon: 'success',

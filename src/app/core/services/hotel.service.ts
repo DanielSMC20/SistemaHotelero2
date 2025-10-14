@@ -74,7 +74,7 @@ export class HotelService {
   }
 
   getRooms(params?: any): Observable<Room[]> {
-    return this.apiService.getRooms(params);
+    return this.apiService.getRoom(params);
   }
 
   getRoomById(id: number): Observable<Room> {
@@ -93,26 +93,7 @@ export class HotelService {
     return this.apiService.deleteRoom(id);
   }
 
-  getRoomStats(): Observable<RoomStats> {
-    return this.apiService.getRooms().pipe(
-      map((rooms: Room[]) => {
-        const total = rooms.length;
-        const available = rooms.filter(
-          (room: Room) => room.status === 'disponible'
-        ).length;
-        const occupied = rooms.filter(
-          (room: Room) => room.status === 'ocupado'
-        ).length;
-        const maintenance = rooms.filter(
-          (room: Room) => room.status === 'mantenimiento'
-        ).length;
-        const occupancyRate =
-          total > 0 ? Math.round((occupied / total) * 100) : 0;
-
-        return { total, available, occupied, maintenance, occupancyRate };
-      })
-    );
-  }
+  
 
   getRoomsByStatus(status: Room['status']): Observable<Room[]> {
     return this.getRooms({ status }).pipe(
@@ -127,7 +108,7 @@ export class HotelService {
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
 
-    return this.apiService.getRooms(params);
+    return this.apiService.getRoom(params);
   }
 
   getRoomTypes(): Observable<any[]> {

@@ -21,7 +21,7 @@ export class AuthGuard implements CanActivate {
   ): Observable<boolean> | Promise<boolean> | boolean {
     if (this.authService.isAuthenticated) {
       const requiredRole = route.data['role'];
-      if (requiredRole && !this.authService.isAdmin) {
+      if (requiredRole && !this.authService['isAdmin']) {
         this.router.navigate(['/dashboard']);
         return false;
       }

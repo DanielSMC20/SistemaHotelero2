@@ -9,16 +9,17 @@ import { ReservationListComponent } from './business/reservations/components/res
 import { GuestListComponent } from './business/guests/components/guest-list/guest-list.component';
 import { TodayActivitiesComponent } from './business/checkin-checkout/components/today-activities/today-activities.component';
 
-// import { AuthGuard } from './core/guards/auth.guard';
+import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-
-  { path: 'login', component: LoginComponent },
-
+  {
+    path: 'login',
+    loadComponent: () => import('./authentication/login/login.component').then(m => m.LoginComponent),
+  },
   {
     path: 'layout',
-    // canActivate: [AuthGuard],
+    canActivate: [AuthGuard],
     component: LayoutComponent,
     children: [
       { path: 'dashboard', component: DashboardComponent },

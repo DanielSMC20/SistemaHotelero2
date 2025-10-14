@@ -1,7 +1,7 @@
 export interface Guest {
   id: number;
-  name: string;
-  dni: string;
-  phone: string;
+  nombresCompletos: string;
   email: string;
+  telefono: string;
+  documento: string;
 }

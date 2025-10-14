@@ -1,40 +1,32 @@
-import { Injectable } from '@angular/core';
 import {
-  CanActivate,
+  CanActivateFn,
   Router,
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
 } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map, take } from 'rxjs/operators';
+import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { Rol } from '../models/enums';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
+export const AuthGuard: CanActivateFn = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
 
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean> | Promise<boolean> | boolean {
-    // Verificar si hay usuario autenticado
-    if (this.authService.isAuthenticated) {
-      // Verificar roles si es necesario
-      const requiredRole = route.data['role'];
-      if (requiredRole && !this.authService.isAdmin) {
-        // Redirigir si no tiene el rol requerido
-        this.router.navigate(['/dashboard']);
-        return false;
-      }
-      return true;
-    }
-
-    // No autenticado - redirigir a login
-    this.router.navigate(['/login'], {
+  if (!auth.isAuthenticated) {
+    return router.createUrlTree(['/login'], {
       queryParams: { returnUrl: state.url },
     });
-    return false;
   }
-}
+
+  const requiredRoles: Rol[] | undefined = route.data?.['roles'];
+  if (!requiredRoles || requiredRoles.length === 0) return true;
+
+  const userRole = auth.currentUser?.role as Rol | undefined;
+
+  if (userRole && requiredRoles.includes(userRole)) return true;
+
+  return router.createUrlTree(['/layout/dashboard']);
+};

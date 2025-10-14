@@ -24,6 +24,5 @@ export const appConfig: ApplicationConfig = {
     AuthService,
     ApiService,
     HotelService,
-    AuthGuard,
   ],
 };
