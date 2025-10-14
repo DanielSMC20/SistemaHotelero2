@@ -1,0 +1,16 @@
+/* Estilo para el botón activo */
+a.active button {
+  background: linear-gradient(to right, #2563eb, #3b82f6); /* azul bonito */
+  color: white;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+}
+
+/* También puedes ajustar el texto */
+a.active p {
+  font-weight: 600;
+}
+
+/* Suaviza el cambio */
+a button {
+  transition: all 0.2s ease-in-out;
+}
