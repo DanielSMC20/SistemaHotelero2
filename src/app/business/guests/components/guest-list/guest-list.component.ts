@@ -2,14 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, ModuleRegistry, AllCommunityModule } from 'ag-grid-community'; // 👈 NUEVO
+import { ColDef, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { GuestApplication } from '../../application/guests.application.ts';
 import { Guest } from '../../domain/guests.interface';
+import { GuestsInfraestructure } from '../../infraestructure/guests.infraestructure';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-
 
 @Component({
   selector: 'app-guest-list',
@@ -19,82 +18,143 @@ ModuleRegistry.registerModules([AllCommunityModule]);
   styleUrls: ['./guest-list.component.css'],
 })
 export class GuestListComponent implements OnInit {
-
   guests: Guest[] = [];
+  rowData: Guest[] = [];
+  p: any;
 
-  constructor(private getAllGuests: GuestApplication) { }
+  gridApi: any;
+  gridColumnApi: any;
 
-  ngOnInit(): void {
-    this.getAllGuests.execute().subscribe({
-      next: (data) => this.guests = data,
-      error: (err) => console.error('Error al obtener huéspedes:', err)
-    });
-  }
-
-
-
-
-
-
+  // 🔹 Definición de columnas con formatos y ancho mínimo
   columnDefs: ColDef<Guest>[] = [
-    {headerName: 'ID',field: 'id', width: 80,cellStyle: { 'text-align': 'center' }, },
-    { headerName: 'Nombres y apellidos', field: 'nombresCompletos' },
-    { headerName: 'DNI', field: 'documento' },
-    { headerName: 'Teléfono', field: 'telefono' },
-    { headerName: 'Email', field: 'email' },
+    {
+      headerName: 'ID',
+      field: 'id',
+      maxWidth: 100,
+      valueFormatter: p => p.value ?? '—',
+      cellClass: 'text-center'
+    },
+    {
+      headerName: 'Nombres y apellidos',
+      field: 'nombresCompletos',
+      minWidth: 260,
+      cellRenderer: (p: { value: any; data: { documento: any; }; }) => `
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-700 font-semibold">${(p.value || '?').charAt(0)}</div>
+          <div class="leading-tight">
+            <div class="font-medium text-gray-900">${p.value || '—'}</div>
+          </div>
+        </div>
+      `
+    },
+    { headerName: 'DNI', field: 'documento', maxWidth: 160 },
+    { headerName: 'Teléfono', field: 'telefono', maxWidth: 180 },
+    {
+      headerName: 'Email',
+      field: 'email',
+      minWidth: 260,
+      cellRenderer: (p: { value: any; }) =>
+        p.value
+          ? `<a class="text-blue-600 hover:underline" href="mailto:${p.value}">${p.value}</a>`
+          : '—'
+    },
     {
       headerName: 'Acciones',
+      width: 220,
+      sortable: false,
+      filter: false,
+      pinned: 'right',
       cellRenderer: (params: any) => {
         const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.justifyContent = 'center';
-        container.style.gap = '8px';
+        container.className = 'flex items-center justify-center gap-2';
 
         const editBtn = document.createElement('button');
-        editBtn.innerText = 'Editar';
+        editBtn.innerHTML = `
+          <span class="inline-flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-1 0v14m7-7H5"/></svg>
+            Editar
+          </span>`;
         editBtn.className =
-          'bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-sm transition-all duration-200';
-        editBtn.addEventListener('click', () => {
-          params.context.componentParent.editar(params.data);
-        });
+          'bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg shadow-sm';
+        editBtn.addEventListener('click', () => params.context.componentParent.editar(params.data));
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.innerText = 'Eliminar';
+        deleteBtn.innerHTML = `
+          <span class="inline-flex items-center gap-1">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
+            Eliminar
+          </span>`;
         deleteBtn.className =
-          'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-sm transition-all duration-200';
-        deleteBtn.addEventListener('click', () => {
-          params.context.componentParent.eliminar();
-        });
+          'bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg shadow-sm';
+        deleteBtn.addEventListener('click', () => params.context.componentParent.eliminar(params.data));
 
         container.appendChild(editBtn);
         container.appendChild(deleteBtn);
         return container;
       },
-      width: 230,
-      cellStyle: { 'text-align': 'center' },
+      cellClass: 'text-center'
     },
   ];
 
-  rowData: Guest[] = [
-    {
-      id: 1,
-      nombresCompletos: 'Saul Espino Carhuayo ',
-      documento: '72848724',
-      telefono: '950788996',
-      email: 'espinosaul2003@gmail.com',
-
-    },
-    {
-     id: 2,
-      nombresCompletos: 'Andrea Sayritupac Ruiz',
-      documento: '8784284',
-      telefono: '65117865',
-      email: 'cbuybc@gmail.com',
-    },
-  ];
+  // 🔹 GridOptions con paginación, filtros flotantes y estados
   gridOptions = {
     context: { componentParent: this },
+    rowHeight: 56,
+    headerHeight: 44,
+    animateRows: true,
+    pagination: true,
+    paginationPageSize: 10,
+    suppressCellFocus: true,
+    defaultColDef: {
+      resizable: true,
+      sortable: true,
+      filter: true,
+      floatingFilter: true,
+      minWidth: 120,
+    },
+    overlayNoRowsTemplate:
+      '<div class="text-gray-500">No hay datos para mostrar</div>',
+    overlayLoadingTemplate:
+      '<div class="text-gray-500">Cargando…</div>',
+    getRowId: (params: any) => params.data.documento, // clave única
   };
+
+  constructor(
+    private GET_HUESPEDES: GuestApplication,
+    private guestsInfraestructure: GuestsInfraestructure
+  ) {}
+
+  ngOnInit(): void {
+    this.loadGuests();
+  }
+
+  onGridReady(params: any) {
+    this.gridApi = params.api;
+    this.gridColumnApi = params.columnApi;
+  }
+
+  // 🔹 Búsqueda global
+  onQuickFilter(ev: Event) {
+    const val = (ev.target as HTMLInputElement).value ?? '';
+    this.gridApi?.setQuickFilter(val);
+  }
+
+  // 🔹 Exportar CSV
+  exportarCSV() {
+    this.gridApi?.exportDataAsCsv({
+      fileName: 'huespedes.csv',
+      processCellCallback: (p: any) => (p.value ?? '').toString(),
+    });
+  }
+
+  private loadGuests(): void {
+    this.GET_HUESPEDES.execute().subscribe({
+      next: (data) => {
+        this.rowData = data;
+      },
+      error: (err) => console.error('Error al cargar huéspedes:', err),
+    });
+  }
 
   editar(guest: Guest) {
     Swal.fire({
@@ -123,18 +183,10 @@ export class GuestListComponent implements OnInit {
       </div>
     `,
       preConfirm: () => {
-        const nombre = (
-          document.getElementById('nombre') as HTMLInputElement
-        ).value.trim();
-        const dni = (
-          document.getElementById('dni') as HTMLInputElement
-        ).value.trim();
-        const telefono = (
-          document.getElementById('telefono') as HTMLInputElement
-        ).value.trim();
-        const email = (
-          document.getElementById('email') as HTMLInputElement
-        ).value.trim();
+        const nombre = (document.getElementById('nombre') as HTMLInputElement).value.trim();
+        const dni = (document.getElementById('dni') as HTMLInputElement).value.trim();
+        const telefono = (document.getElementById('telefono') as HTMLInputElement).value.trim();
+        const email = (document.getElementById('email') as HTMLInputElement).value.trim();
 
         if (!nombre || !dni || !telefono || !email) {
           Swal.showValidationMessage('⚠️ Todos los campos son obligatorios');
@@ -145,56 +197,45 @@ export class GuestListComponent implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed && result.value) {
-        guest.nombresCompletos = result.value.nombre;
-        guest.email = result.value.email;
-        guest.telefono = result.value.telefono;
-        guest.documento = result.value.dni;
-        
+        const updatedGuest: Guest = {
+          ...guest,
+          nombresCompletos: result.value.nombre,
+          documento: result.value.dni,
+          telefono: result.value.telefono,
+          email: result.value.email,
+        };
 
-        Swal.fire({
-          icon: 'success',
-          title: '¡Actualizado!',
-          text: 'Los datos del huésped fueron actualizados correctamente.',
-          showConfirmButton: false,
-          timer: 1500,
+        this.guestsInfraestructure.getEditGuest(guest.documento, updatedGuest).subscribe({
+          next: () => {
+            // Actualiza solo en memoria
+          this.gridApi.applyTransaction({ update: [updatedGuest] });
+
+
+            Swal.fire({
+              icon: 'success',
+              title: '¡Actualizado!',
+              text: 'Los datos del huésped fueron actualizados correctamente.',
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          },
+          error: (err) => {
+            console.error(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo actualizar el huésped.',
+            });
+          },
         });
+
       }
     });
+
   }
 
-  eliminar() {
-    const swalWithBootstrapButtons = Swal.mixin({
-      customClass: {
-        confirmButton: 'btn btn-success',
-        cancelButton: 'btn btn-danger',
-      },
-      buttonsStyling: true,
-    });
-    swalWithBootstrapButtons
-      .fire({
-        title: '¿Estas seguro de eliminar este usuario?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Si, eliminar',
-        cancelButtonText: 'No, cancelar!',
+  
 
-        reverseButtons: true,
-      })
-      .then((result) => {
-        if (result.isConfirmed) {
-          swalWithBootstrapButtons.fire({
-            title: 'Elinado!',
-            text: 'El usuario se ha eliminado',
-            icon: 'success',
-          });
-        } // else if (result?.dismiss == Swal.DismissReason.cancel) {
-        //   swalWithBootstrapButtons.fire({
-        //     title: 'Cancelado',
-        //     icon: 'error',
-        //   });
-        // }
-      });
-  }
   registrar() {
     Swal.fire({
       title: 'Registrar nuevo huésped',
@@ -261,5 +302,6 @@ export class GuestListComponent implements OnInit {
       }
     });
   }
+
 
 }

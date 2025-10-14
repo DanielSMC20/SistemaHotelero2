@@ -7,4 +7,6 @@ const routes: Routes = [];
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class GuestsRoutingModule { }
+export class GuestsRoutingModule {
+  
+ }
