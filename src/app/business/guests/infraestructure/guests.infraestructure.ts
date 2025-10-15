@@ -7,9 +7,11 @@ import { Guest } from '../domain/guests.interface';
   providedIn: 'root'
 })
 export class GuestsInfraestructure {
+
   private readonly API_URL_LISTA_HUESPEDES = 'http://localhost:8080/customers';
 
   constructor(private http: HttpClient) {}
+  
 
   getAllGuests(): Observable<Guest[]> {
     // Obtén el token del localStorage (o de tu AuthService)
@@ -23,5 +25,21 @@ export class GuestsInfraestructure {
 
     // Pasa los headers a la petición
     return this.http.get<Guest[]>(this.API_URL_LISTA_HUESPEDES, { headers });
-  }
+}
+getEditGuest(documento: string, guest: Guest): Observable<Guest> {
+  const token = localStorage.getItem('token');
+
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  });
+
+  const url = `${this.API_URL_LISTA_HUESPEDES}/documento/${documento}`;
+
+  return this.http.put<Guest>(url, guest, { headers });
+}
+postRegisterGuest(){
+    
+}
+
 }

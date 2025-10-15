@@ -31,10 +31,13 @@ export interface Reserva {
 
 // === Auth ===
 export interface AuthUser {
-  username: string;
-  role?: Rol;                  // ADMIN | RECEPCIONISTA | GERENTE
-  email?: string;
-  name?: string;
+  id: number;
+  usuario: string;
+  clave:string;
+  role?: Rol;    
+  nombres: string;
+  apellidos:string;
+  pais:string;
 }
 
 export interface LoginResponse {
