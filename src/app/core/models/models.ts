@@ -8,6 +8,7 @@ export interface Cliente {
   nombresCompletos: string; // mapea @Column(name="nombres_completos")
   email?: string;
   telefono?: string;
+  tipoDocumento: string; // DNI | PASAPORTE | CARNET EXTRANJERIA
 }
 
 // === Habitacion ===
@@ -19,15 +20,6 @@ export interface Habitacion {
   disponible: boolean;
 }
 
-// === Reserva ===
-export interface Reserva {
-  id: number;
-  cliente: Cliente;
-  habitacion: Habitacion;
-  fechaCheckIn: string;        // ISO date del backend
-  fechaCheckOut: string;       // ISO date del backend
-  estado?: string;
-}
 
 // === Auth ===
 export interface AuthUser {
@@ -43,3 +35,13 @@ export interface AuthUser {
 export interface LoginResponse {
   token: string;               // tu /auth/login devuelve { token }
 }
+
+export interface Invoice {
+  id: number;
+  number: string;
+  reservationId: number;
+  total: number;       // si tu backend usa BigDecimal, Jackson lo manda como number
+  status: string;      // PENDIENTE | PAGADA | ANULADA
+  issuedAt: string;    // ISO
+}
+
