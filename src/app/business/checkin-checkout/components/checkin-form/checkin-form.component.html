@@ -1,1 +1,10 @@
-<p>checkin-form works!</p>
+<!-- checkin-form.component.html -->
+<div class="p-4 space-y-4">
+  <h1 class="text-2xl font-bold">Check-in</h1>
+  <app-check-center
+    [reservas]="reservas"
+    [mode]="'checkin'"
+    [hideHeader]="true"
+    (doCheckIn)="onDoCheckIn($event)">
+  </app-check-center>
+</div>

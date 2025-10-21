@@ -1,0 +1,58 @@
+<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+  <div class="relative p-6 bg-white w-96 max-w-md m-4 rounded-lg shadow-xl">
+    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Confirmar pago</h3>
+
+    <div *ngIf="factura">
+      <div class="mb-4">
+        <p class="text-sm text-gray-500">Factura #{{ factura.id }}</p>
+        <p class="text-lg font-semibold">Total: S/ {{ factura.total | number:'1.2-2' }}</p>
+        <p class="text-lg font-semibold text-red-500">Deuda: S/ {{ factura.deuda | number:'1.2-2' }}</p>
+      </div>
+
+      <!-- Método de Pago -->
+      <div class="mb-6">
+        <label for="metodo" class="block text-sm font-medium text-gray-700">Método de pago:</label>
+        <select id="metodo" [(ngModel)]="metodoPago" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+          <option>Efectivo</option>
+          <option>Tarjeta</option>
+        </select>
+      </div>
+
+      <!-- Monto a Pagar -->
+      <div class="mb-6">
+        <label for="monto" class="block text-sm font-medium text-gray-700">Monto a pagar:</label>
+        <input type="number" id="monto" [(ngModel)]="montoPago" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+      </div>
+
+      <!-- Gastos Adicionales -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700">Gastos adicionales</label>
+        <div class="grid grid-cols-2 gap-4 mt-2">
+          <input [(ngModel)]="extraConcepto" type="text" placeholder="Concepto" class="px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <input [(ngModel)]="extraMonto" type="number" placeholder="Monto" class="px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div class="mt-4">
+          <button (click)="addExtra()" class="w-full px-6 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-500 focus:ring-2 focus:ring-green-400">Agregar</button>
+        </div>
+        <div class="mt-4">
+          <ul class="space-y-2">
+            <li *ngFor="let extra of extras" class="flex justify-between items-center text-gray-700">
+              <span>{{ extra.concepto }} - S/ {{ extra.monto | number:'1.2-2' }}</span>
+              <button (click)="removeExtra(extra.id)" class="text-red-500 hover:text-red-700">Eliminar</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Total a Pagar -->
+      <div class="mb-6">
+        <p class="text-lg font-semibold text-gray-800">Total a Pagar: S/ {{ totalAPagar | number:'1.2-2' }}</p>
+      </div>
+
+      <div class="flex justify-between space-x-2 mt-4">
+        <button (click)="close.emit()" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-300 rounded-md shadow-sm hover:bg-gray-400">Cancelar</button>
+        <button (click)="confirmarPago()" class="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-500 focus:ring-2 focus:ring-blue-400">Pagar</button>
+      </div>
+    </div>
+  </div>
+</div>

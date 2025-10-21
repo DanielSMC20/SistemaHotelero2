@@ -14,12 +14,36 @@ export interface Cliente {
 // === Habitacion ===
 export interface Habitacion {
   id: number;
+  number: string;   // si en backend es 'numero', puedes mapear aquí
   numero: string;
-  tipo: TipoHabitacion;        // SIMPLE | DOBLE | SUITE | MATRIMONIAL
+  tipo: 'SIMPLE'|'DOBLE'|'MATRIMONIAL'|'SUITE';
+  estado: 'DISPONIBLE'|'OCUPADA'|'MANTENIMIENTO';
+  capacidad: number;
+  camas: number;
+  rango?: string;
   precioPorNoche: number;
-  disponible: boolean;
+  precioPorHora: number;
+  detalles?: string;
 }
+export interface InvoiceResponse {
+  id: number;
+  monto: number;           // Total pagado o a pagar
+  metodo: string;          // Efectivo / Tarjeta / Yape / etc.
+  estado: string;          // COMPLETADO / PENDIENTE / REEMBOLSADO / FALLIDO
+  referencia?: string;     // Código opcional
+  registradoPor?: string;  // Usuario que lo registró
+  pagadoEn?: string;       // Fecha/hora de pago (ISO string)
+  reservaId: number;       // ID de la reserva asociada
 
+  // 🔽 campos opcionales que puedes calcular o simular en el front
+  total?: number;          // total de la factura (si la usas en el modal)
+  deuda?: number;          // monto pendiente (si la usas en el modal)
+}
+export interface ExtraCharge{
+  id: string;
+  concepto: string;
+  monto: number;
+}
 
 // === Auth ===
 export interface AuthUser {

@@ -10,10 +10,13 @@ import { AuthService } from './core/services/auth.service';
 import { ApiService } from './core/services/api.service';
 import { HotelService } from './core/services/hotel.service';
 import { AuthGuard } from './core/guards/auth.guard';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts'; // Importa esto
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
+    provideCharts(withDefaultRegisterables()), 
 
     importProvidersFrom(
       BrowserAnimationsModule,

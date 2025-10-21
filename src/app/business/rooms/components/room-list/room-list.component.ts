@@ -2,11 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HotelService, Room } from '../../../../core/services/hotel.service';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import Swal from 'sweetalert2';
 
+type RoomView = 'table' | 'grid';
 @Component({
   selector: 'app-room-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule],
   templateUrl: './room-list.component.html',
   styleUrls: ['./room-list.component.css'],
 })
@@ -14,89 +24,210 @@ export class RoomListComponent implements OnInit {
   rooms: Room[] = [];
   loading = true;
   error: string | null = null;
+  view: RoomView = 'table';
+  showCreate = false;
+  createForm!: FormGroup;
 
   availableRoomsCount = 0;
   occupiedRoomsCount = 0;
   maintenanceRoomsCount = 0;
   occupancyPercentage = 0;
+  selected: Room | undefined;
+  opening: boolean | undefined;
+  saving: any;
+  actionLoading: any;
+  setView(v: RoomView) {
+    this.view = v;
+  }
 
-  constructor(private hotelService: HotelService) {}
+  get isGrid() {
+    return this.view === 'grid';
+  }
+  get isTable() {
+    return this.view === 'table';
+  }
+
+  total = 0;
+  disponibles = 0;
+  ocupadas = 0;
+  mantenimiento = 0;
+  porcentajeOcupacion = 0;
+  constructor(private fb: FormBuilder, private hotelService: HotelService) {}
 
   ngOnInit(): void {
     this.loadRooms();
+    this.view = 'table';
+    this.buildCreateForm();
+      this.hotelService.getRooms().subscribe((rooms: Room[]) => {
+      this.total = rooms.length;
+      this.disponibles = rooms.filter(r => r.status === 'disponible').length;
+      this.ocupadas = rooms.filter(r => r.status === 'ocupado').length;
+      this.mantenimiento = rooms.filter(r => r.status === 'mantenimiento').length;
+    });
+  }
+
+  openCreateModal() {
+    this.showCreate = true;
+    document.body.style.overflow = 'hidden';
+  }
+  closeCreateModal() {
+    this.showCreate = false;
+    document.body.style.overflow = '';
+    this.createForm.reset({
+      numero: '',
+      tipo: '',
+      estado: 'DISPONIBLE',
+      capacidad: 1,
+      camas: 1,
+      rango: '',
+      precioPorNoche: 0,
+      precioPorHora: 0,
+      detalles: '',
+    });
+  }
+  private buildCreateForm() {
+    this.createForm = this.fb.group({
+      numero: ['', [Validators.required, Validators.maxLength(10)]],
+      tipo: ['', [Validators.required]],
+      estado: ['DISPONIBLE', [Validators.required]],
+      capacidad: [1, [Validators.required, Validators.min(1)]],
+      camas: [1, [Validators.required, Validators.min(1)]],
+      rango: [''],
+      precioPorNoche: [0, [Validators.required, Validators.min(0)]],
+      precioPorHora: [0, [Validators.required, Validators.min(0)]],
+      detalles: [''],
+    });
   }
 
   loadRooms(): void {
     this.loading = true;
     this.error = null;
+    this.hotelService.getRooms().subscribe({
+      next: (rooms) => {
+        this.rooms = rooms;
+        this.updateStats();
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo cargar habitaciones';
+        this.loading = false;
+      },
+    });
+  }
+  async saveRoom() {
+    if (this.createForm.invalid) {
+      this.createForm.markAllAsTouched();
+      return;
+    }
 
-    setTimeout(() => {
-      this.rooms = [
-        {
-          id: 1,
-          number: '101',
-          type: 'standard',
-          status: 'disponible',
-          price: 120,
-          maxGuests: 2,
-          amenities: ['WiFi', 'TV'],
-          floor: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 2,
-          number: '102',
-          type: 'suite',
-          status: 'ocupado',
-          price: 250,
-          maxGuests: 4,
-          amenities: ['WiFi', 'TV', 'Jacuzzi'],
-          floor: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 3,
-          number: '201',
-          type: 'deluxe',
-          status: 'mantenimiento',
-          price: 180,
-          maxGuests: 3,
-          amenities: ['WiFi', 'Minibar'],
-          floor: 2,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 4,
-          number: '202',
-          type: 'standard',
-          status: 'disponible',
-          price: 120,
-          maxGuests: 2,
-          amenities: ['WiFi', 'TV'],
-          floor: 2,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 5,
-          number: '301',
-          type: 'suite',
-          status: 'ocupado',
-          price: 250,
-          maxGuests: 4,
-          amenities: ['WiFi', 'TV', 'Jacuzzi'],
-          floor: 3,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+    const payload = this.createForm.value; // ya coincide con el JSON esperado
+    // Ejemplo:
+    // {
+    //   "numero":"205", "tipo":"SUITE", "estado":"DISPONIBLE",
+    //   "capacidad":2, "camas":1, "rango":"Premium",
+    //   "precioPorNoche":320.0, "precioPorHora":60.0, "detalles":"..."
+    // }
 
+    this.saving = true;
+    try {
+      const created = await firstValueFrom(
+        this.hotelService.createRoom(payload)
+      );
+      this.rooms = [created, ...this.rooms];
       this.updateStats();
-      this.loading = false;
-    }, 1000);
+      this.closeCreateModal();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  openRoom(r: Room) {
+    this.selected = r;
+    this.opening = true;
+    // opcional: bloquear scroll de fondo
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => (this.opening = false), 150);
+  }
+
+  closeRoom() {
+    this.selected = undefined;
+    document.body.style.overflow = '';
+  }
+
+  async markAvailable(r: Room) {
+    const prev = r.status;
+    r.status = 'disponible';
+    this.updateStats();
+
+    try {
+      await firstValueFrom(this.hotelService.setAvailable(r.id));
+      Swal.fire({
+        icon: 'success',
+        title: '¡Actualizado!',
+        text: `La habitación ${r.number} fue marcada como disponible.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      r.status = prev;
+      this.updateStats();
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo marcar como disponible.',
+      });
+    }
+  }
+
+  async markOccupied(r: Room) {
+    const prev = r.status;
+    r.status = 'ocupado';
+    this.updateStats();
+
+    try {
+      await firstValueFrom(this.hotelService.setOccupied(r.id));
+      Swal.fire({
+        icon: 'success',
+        title: '¡Actualizado!',
+        text: `La habitación ${r.number} fue marcada como ocupada.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      r.status = prev;
+      this.updateStats();
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo marcar como ocupada.',
+      });
+    }
+  }
+  async markMaintenance(r: Room) {
+    const prev = r.status;
+    r.status = 'mantenimiento';
+    this.updateStats();
+
+    try {
+      await firstValueFrom(this.hotelService.setMaintenance(r.id));
+      Swal.fire({
+        icon: 'warning',
+        title: '¡Actualizado!',
+        text: `La habitación ${r.number} está en mantenimiento.`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      r.status = prev;
+      this.updateStats();
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo marcar en mantenimiento.',
+      });
+    }
   }
 
   private updateStats(): void {
@@ -187,5 +318,25 @@ export class RoomListComponent implements OnInit {
 
   trackByRoomId(index: number, room: Room): number {
     return room.id;
+  }
+
+  q = '';
+
+  get filteredRooms(): Room[] {
+    const term = this.q.trim().toLowerCase();
+    if (!term) return this.rooms;
+    return this.rooms.filter((r) =>
+      [
+        r.number,
+        r.type,
+        r.status,
+        String(r.maxGuests ?? ''),
+        String(r.price ?? ''),
+      ].some((v) => (v ?? '').toString().toLowerCase().includes(term))
+    );
+  }
+
+  refresh() {
+    this.loadRooms();
   }
 }

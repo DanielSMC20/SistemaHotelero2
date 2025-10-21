@@ -1,1 +1,10 @@
-<p>checkout-list works!</p>
+<!-- checkout-list.component.html -->
+<div class="p-4 space-y-4">
+  <h1 class="text-2xl font-bold">Check-out</h1>
+  <app-check-center
+    [reservas]="reservas"
+    [mode]="'checkout'"
+    [hideHeader]="true"
+    (doCheckOut)="onDoCheckOut($event)">
+  </app-check-center>
+</div>

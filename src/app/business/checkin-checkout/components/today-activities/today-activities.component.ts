@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Reserva } from '../../../reservations/domain/reservation.interface';
+import { ReservationInfraestructure } from '../../../reservations/infraestructure/reservation.infraestructure';
+import { CheckCenterComponent } from "../../shared/checkCenterComponent";
 
 interface Activity {
   id: string;
@@ -15,14 +18,14 @@ interface Activity {
 @Component({
   selector: 'app-today-activities',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CheckCenterComponent],
   templateUrl: './today-activities.component.html',
   styleUrls: ['./today-activities.component.css'],
 })
 export class TodayActivitiesComponent implements OnInit {
   activities: Activity[] = [];
-
-  constructor() {}
+  reservas: Reserva[] = [];
+  constructor(private api: ReservationInfraestructure){}
 
   ngOnInit(): void {
     this.activities = [
@@ -63,6 +66,8 @@ export class TodayActivitiesComponent implements OnInit {
         priority: 'high',
       },
     ];
+    this.api.getAllReservations().subscribe(d => this.reservas = d);
+
   }
 
   getTypeIcon(type: string): string {
@@ -79,6 +84,10 @@ export class TodayActivitiesComponent implements OnInit {
         return '📋';
     }
   }
+  onDoCheckIn(r: Reserva){ this.api.checkIn(r.id).subscribe(_ => this.refresh()); }
+  onDoCheckOut(r: Reserva){ this.api.checkOut(r.id).subscribe(_ => this.refresh()); }
+
+  private refresh(){ this.api.getAllReservations().subscribe(d => this.reservas = d); }
 
   getPriorityColor(priority: string): string {
     switch (priority) {

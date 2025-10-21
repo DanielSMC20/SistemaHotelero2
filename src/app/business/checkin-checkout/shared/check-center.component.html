@@ -1,0 +1,120 @@
+<div class="w-full max-w-[1100px] mx-auto bg-white rounded-2xl shadow border border-slate-200 overflow-hidden">
+  <!-- Header opcional -->
+  <div *ngIf="!hideHeader" class="px-5 py-4 border-b border-slate-200">
+    <h3 class="text-lg font-semibold text-slate-900">Centro de Check-in / Check-out</h3>
+    <p class="text-xs text-slate-500">Selecciona una reserva y confirma la acción.</p>
+  </div>
+
+  <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- IZQ -->
+    <div class="md:col-span-2 space-y-3">
+      <!-- Tabs según mode -->
+      <div class="inline-flex rounded-xl ring-1 ring-slate-200 overflow-hidden" *ngIf="mode === 'both'">
+        <button class="px-3 py-2 text-sm font-medium"
+                [class.bg-slate-900]="tab==='arrivals'" [class.text-white]="tab==='arrivals'"
+                (click)="setTab('arrivals')">Pendientes de llegada</button>
+        <button class="px-3 py-2 text-sm font-medium"
+                [class.bg-slate-900]="tab==='stays'" [class.text-white]="tab==='stays'"
+                (click)="setTab('stays')">Alojados</button>
+      </div>
+
+      <!-- Buscador -->
+      <input
+  type="text"
+  class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+  placeholder="Buscar por nombre, documento o habitación…"
+  (input)="onSearch($any($event.target).value)"
+/>
+
+      <!-- Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[56vh] overflow-auto pr-1">
+        <!-- ARRIVALS -->
+        <ng-container *ngIf="mode !== 'checkout' && (tab === 'arrivals' || mode !== 'both'); else staysTpl">
+  <div *ngFor="let r of arrivals" (click)="pick(r)"
+       class="cursor-pointer rounded-xl border p-3 transition
+              border-slate-200 hover:border-slate-300 hover:shadow-sm"
+       [class.ring-2]="selected?.id === r.id"
+       [class.ring-indigo-400]="selected?.id === r.id">
+    <div class="flex items-center justify-between">
+      <div class="text-xs px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 ring-1 ring-sky-200">Reservada</div>
+      <div class="text-[11px] text-slate-500">#{{ r.id }}</div>
+    </div>
+
+    <div class="mt-2 text-sm font-medium text-slate-900 truncate">
+      {{ r.cliente.nombresCompletos || '—' }}
+    </div>
+    <div class="text-xs text-slate-600">Doc: {{ r.cliente.documento || '—' }}</div>
+    <div class="mt-1 text-xs text-slate-600">Hab: {{ r.habitacion.numero || '—' }}</div>
+    <div class="mt-1 text-xs text-slate-600">Check-in: {{ r.checkIn | date:'yyyy-MM-dd' }}</div>
+  </div>
+</ng-container>
+
+
+        <!-- STAYS -->
+        <ng-template #staysTpl>
+  <div *ngFor="let r of stays" (click)="pick(r)"
+       class="cursor-pointer rounded-xl border p-3 transition
+              border-slate-200 hover:border-slate-300 hover:shadow-sm"
+       [class.ring-2]="selected?.id === r.id"
+       [class.ring-emerald-400]="selected?.id === r.id">
+    <div class="flex items-center justify-between">
+      <div class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">Check-in</div>
+      <div class="text-[11px] text-slate-500">#{{ r.id }}</div>
+    </div>
+
+    <div class="mt-2 text-sm font-medium text-slate-900 truncate">
+      {{ r.cliente.nombresCompletos || '—' }}
+    </div>
+    <div class="text-xs text-slate-600">Doc: {{ r.cliente.documento || '—' }}</div>
+    <div class="mt-1 text-xs text-slate-600">Hab: {{ r.habitacion.numero || '—' }}</div>
+    <div class="mt-1 text-xs text-slate-600">Check-out: {{ r.checkOut | date:'yyyy-MM-dd' }}</div>
+  </div>
+</ng-template>
+      </div>
+    </div>
+
+    <!-- DER: Detalle + CTA -->
+    <div class="space-y-3">
+      <div class="rounded-2xl border border-slate-200 p-4">
+        <div class="text-sm font-semibold text-slate-900 mb-2">Detalle</div>
+
+        <div class="text-sm space-y-1" *ngIf="selected; else empty">
+        <div class="flex justify-between"><span class="text-slate-500">Cliente</span><span>{{ selected.cliente.nombresCompletos }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Documento</span><span>{{ selected.cliente.documento }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Habitación</span><span>{{ selected.habitacion.numero }} ({{ selected.habitacion.tipo }})</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Check-in</span><span>{{ selected.checkIn  | date:'yyyy-MM-dd' }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Check-out</span><span>{{ selected.checkOut | date:'yyyy-MM-dd' }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Estado</span><span>{{ selected.estado }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Total</span><span>S/ {{ selected.precioTotal | number:'1.2-2' }}</span></div>
+        </div>
+
+        <ng-template #empty>
+          <div class="text-sm text-slate-500">Selecciona una tarjeta.</div>
+        </ng-template>
+      </div>
+
+      <div class="flex gap-2 justify-end">
+        <button class="px-3 py-2 rounded-xl ring-1 ring-slate-300 hover:bg-slate-50"
+                (click)="selected = null">Limpiar</button>
+
+        <button class="px-3 py-2 rounded-xl text-white"
+                [ngClass]="{
+                  'bg-emerald-600 hover:bg-emerald-700': canCheckIn(selected),
+                  'bg-amber-600 hover:bg-amber-700': canCheckOut(selected),
+                  'bg-slate-300 cursor-not-allowed': !(canCheckIn(selected) || canCheckOut(selected))
+                }"
+                [disabled]="!(canCheckIn(selected) || canCheckOut(selected))"
+                (click)="primaryAction()">
+          {{ canCheckIn(selected) ? 'Confirmar Check-in' : (canCheckOut(selected) ? 'Confirmar Check-out' : 'Acción no disponible') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-payment-modal
+  *ngIf="mostrarModalPago"
+  [factura]="facturaSeleccionada"
+  (close)="cerrarModalPago()"
+  (pay)="procesarPago($event)">
+</app-payment-modal>
