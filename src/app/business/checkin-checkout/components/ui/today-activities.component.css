@@ -1,0 +1,8 @@
+::ng-deep .e-schedule .e-appointment .e-subject {
+  font-weight: 600;
+  color: #fff;
+}
+
+::ng-deep .e-schedule .e-appointment {
+  border-radius: 8px;
+}
