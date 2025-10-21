@@ -3,10 +3,35 @@ import { env } from '../environments/environment'; // usa environment si prefier
 // src/app/core/services/api.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 const API_BASE = env.API_BASE;
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
+export interface DayTotal {
+  day: string;       // 'YYYY-MM-DD'
+  total: number;     // BigDecimal -> number
+}
 
+export interface DailyRevenueItem {
+  roomNumber: string;
+  guestName: string;
+  dni: string;
+  checkIn: string;   // "YYYY-MM-DD"
+  checkOut: string;  // "YYYY-MM-DD"
+  price: number;     // BigDecimal/string -> number
+}
+
+export interface OccupancyItem {
+  day: string;        // "YYYY-MM-DD"
+  occupied: number;
+  available: number;
+  maintenance?: number;
+}
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   API_BASE: string = env.API_BASE;
@@ -38,6 +63,17 @@ getPaymentsByReservation(reservaId: number) {
     `${this.API_BASE}/payments/by-reservation/${reservaId}`, { headers: this.authHeaders() }
   );
 }
+revenueTotals(start: string, end: string) {
+  return this.http.get<{ success: boolean; message: string; data: DayTotal[] }>(
+    `${this.API_BASE}/payments/revenue`,
+    { headers: this.authHeaders(), params: this.toParams({ start, end }) }
+  ).pipe(
+    map(resp => (resp?.data ?? []).map(r => ({
+      day: r.day?.substring(0, 10),
+      total: Number(r.total ?? 0)
+    })))
+  );
+}
 
   listCustomers(q?: any): Observable<any> { return this.http.get(`${this.API_BASE}/customers`, { headers: this.authHeaders(), params: this.toParams(q) }); }
   getCustomer(id: number): Observable<any> { return this.http.get(`${this.API_BASE}/customers/${id}`, { headers: this.authHeaders() }); }
@@ -62,24 +98,40 @@ getPaymentsByReservation(reservaId: number) {
   listPayments(q?: any) { return this.http.get(`${this.API_BASE}/payments`, { headers: this.authHeaders(), params: this.toParams(q) }); }
   listInvoices(q?: any) { return this.http.get(`${this.API_BASE}/invoices`, { headers: this.authHeaders(), params: this.toParams(q) }); }
   listReports(q?: any)  { return this.http.get(`${this.API_BASE}/reports`,  { headers: this.authHeaders(), params: this.toParams(q) }); }
-
-    getRevenueByDay(start: Date, end: Date): Observable<any> {
-    const params = new HttpParams()
-      .set('start', start.toISOString().slice(0, 10))
-      .set('end', end.toISOString().slice(0, 10));
-    return this.http.get(`${this.API_BASE}/reports/revenue`, {
-      headers: this.authHeaders(),
-      params,
-    });
+  revenue(start: string, end: string): Observable<DailyRevenueItem[]> {
+    return this.http.get<ApiResponse<DailyRevenueItem[]>>(
+      `${this.API_BASE}/reports/daily-revenue`,
+      { headers: this.authHeaders(), params: this.toParams({ start, end }) }
+    ).pipe(
+      map(resp => (resp?.data ?? []).map(x => ({
+        ...x,
+        price: Number(x.price ?? 0)
+      })))
+    );
   }
 
-  getOccupancyByDay(start: Date, end: Date): Observable<any> {
-    const params = new HttpParams()
-      .set('start', start.toISOString().slice(0, 10))
-      .set('end', end.toISOString().slice(0, 10));
-    return this.http.get(`${this.API_BASE}/reports/occupancy`, {
-      headers: this.authHeaders(),
-      params,
-    });
+  /**
+   * Ocupación por día (ajusta la ruta si tu backend usa otra)
+   * Espera data: { day: 'YYYY-MM-DD', occupied: number, available: number, maintenance?: number }[]
+   */
+  occupancy(start: string, end: string): Observable<OccupancyItem[]> {
+    return this.http.get<ApiResponse<OccupancyItem[]>>(
+      `${this.API_BASE}/reports/occupancy`,
+      { headers: this.authHeaders(), params: this.toParams({ start, end }) }
+    ).pipe(map((resp: { data: any; }) => resp?.data ?? []));
   }
+
+  // ======== Compat / si ya los estabas usando en otros componentes ========
+  getRevenueByDay(start: Date, end: Date): Observable<DailyRevenueItem[]> {
+    const s = start.toISOString().slice(0, 10);
+    const e = end.toISOString().slice(0, 10);
+    return this.revenue(s, e);
+  }
+
+  getOccupancyByDay(start: Date, end: Date): Observable<OccupancyItem[]> {
+    const s = start.toISOString().slice(0, 10);
+    const e = end.toISOString().slice(0, 10);
+    return this.occupancy(s, e);
+  }
+
 }

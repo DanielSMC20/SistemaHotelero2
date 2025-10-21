@@ -4,6 +4,7 @@ import { Reserva } from '../../reservations/domain/reservation.interface';
 import { PaymentModalComponent } from '../../../components/payment-modal.component';
 import { ApiService } from '../../../core/services/api.service';
 import { ReservationInfraestructure } from '../../reservations/infraestructure/reservation.infraestructure';
+import Swal from 'sweetalert2';
 
 type Mode = 'checkin' | 'checkout' | 'both';
 
@@ -40,9 +41,13 @@ export class CheckCenterComponent implements OnChanges {
   stays: Reserva[] = [];
 
   // ===== Helpers =====
-  private norm(s: any) { return (s ?? '').toString().trim(); }
-  private state(r?: Reserva | null) { return this.norm(r?.estado).toUpperCase(); }
+private norm(s: any) {
+  return (s ?? '').toString().trim().toUpperCase();
+}  private state(r?: Reserva | null) { return this.norm(r?.estado).toUpperCase(); }
 
+  ngOnInit(): void {
+    this.refresh(); // ✅ Llama la API al iniciar
+  }
   ngOnChanges(_: SimpleChanges): void {
     // tab por modo
     this.tab = (this.mode === 'checkout') ? 'stays' : 'arrivals';
@@ -137,11 +142,21 @@ export class CheckCenterComponent implements OnChanges {
         // Después de registrar el pago, hacemos el check-out
         this.onCheckOutAfterPayment(this.facturaSeleccionada.reservationId);
         this.cerrarModalPago();
-        alert('Pago completado con éxito.');
+        Swal.fire({
+  icon: 'success',
+  title: 'Pago completado con éxito',
+  text: 'El check-out se ha registrado correctamente.',
+  confirmButtonColor: '#2563eb'
+});
       },
       error: (err: any) => {
         console.error('Error al registrar el pago', err);
-        alert('Error al registrar el pago');
+        alert('Error al registrar el pago');Swal.fire({
+  icon: 'error',
+  title: 'Error al registrar el pago',
+  text: 'Verifica la conexión o el servidor.',
+  confirmButtonColor: '#dc2626'
+});
       },
     });
   }
@@ -159,7 +174,6 @@ export class CheckCenterComponent implements OnChanges {
   onDoCheckOut(r: Reserva) {
     this.reser.checkOut(r.id).subscribe({
       next: () => {
-        // Emitimos por si el padre quiere reaccionar
         this.doCheckOut.emit(r);
         this.refresh();
       },
@@ -167,7 +181,6 @@ export class CheckCenterComponent implements OnChanges {
     });
   }
 
-  // Check-out específico después del pago
   private onCheckOutAfterPayment(reservationId: number) {
     this.reser.checkOut(reservationId).subscribe({
       next: () => {

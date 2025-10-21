@@ -1,8 +1,18 @@
 <div class="min-h-screen bg-gray-50 flex flex-col items-center py-12">
-  <h2 class="text-3xl font-bold text-gray-800 mb-8">Panel de Control</h2>
+  <h2 class="text-3xl font-bold text-gray-800 mb-2">Panel de Control</h2>
+  <p class="text-gray-500 mb-8">
+    Rango: {{ start | date:'yyyy-MM-dd' }} → {{ end | date:'yyyy-MM-dd' }}
+  </p>
+
+  <!-- Estado -->
+  <div *ngIf="error" class="mb-6 w-full max-w-5xl px-6">
+    <div class="bg-rose-100 text-rose-800 rounded-xl p-4 border border-rose-200">
+      {{ error }}
+    </div>
+  </div>
 
   <!-- Indicadores de tarjetas -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl w-full px-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl w-full px-6">
     <div class="bg-white shadow-md rounded-xl p-6 text-center">
       <p class="text-sm text-gray-500 mb-1">Total Habitaciones</p>
       <h3 class="text-2xl font-bold text-gray-700">{{ totalRooms }}</h3>
@@ -19,31 +29,58 @@
     </div>
 
     <div class="bg-yellow-100 text-yellow-800 shadow-md rounded-xl p-6 text-center">
-      <p class="text-sm mb-1">Ingresos Promedio</p>
-      <h3 class="text-2xl font-bold">S/. {{ avgRevenue() }}</h3>
+      <p class="text-sm mb-1">Promedio Diario</p>
+      <h3 class="text-2xl font-bold">S/. {{ avgRevenue() | number:'1.0-0' }}</h3>
+    </div>
+
+    <div class="bg-indigo-100 text-indigo-900 shadow-md rounded-xl p-6 text-center">
+      <p class="text-sm mb-1">Ingresos del Mes</p>
+      <h3 class="text-2xl font-bold">
+        S/. {{ totalRevenue() | number:'1.2-2' }}
+      </h3>
     </div>
   </div>
 
-  <!-- Botones para cambiar rango de fechas -->
-  <div class="flex gap-4 mt-6">
-    <button (click)="setRange(7)" class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors">
-      Últimos 7 días
+  <!-- Controles de mes -->
+  <div class="flex flex-wrap gap-3 mt-6 items-center">
+    <button (click)="shiftMonth(-1)"
+            class="px-3 py-2 bg-slate-200 rounded hover:bg-slate-300 transition-colors">
+      ◀ Mes anterior
     </button>
-    <button (click)="setRange(30)" class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors">
-      Últimos 30 días
+
+<input
+  type="month"
+  #monthInput
+  [value]="selectedMonth"
+  (change)="onMonthChange(monthInput.value)"
+  class="px-3 py-2 border rounded bg-white"
+/>
+    <button (click)="shiftMonth(1)"
+            class="px-3 py-2 bg-slate-200 rounded hover:bg-slate-300 transition-colors">
+      Mes siguiente ▶
     </button>
   </div>
 
+  <!-- Loading -->
+  <div *ngIf="loading" class="mt-8 text-gray-500">Cargando reportes…</div>
+
   <!-- Contenedor principal de los gráficos -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-5xl px-6 mt-10">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-6xl px-6 mt-10" [class.opacity-50]="loading">
     <!-- Gráfico de ingresos (Línea) -->
     <div class="bg-white shadow-lg rounded-xl p-6">
-      <h3 class="text-lg font-semibold text-gray-800 mb-4">Ingresos Diarios</h3>
-      <div class="chart-container" style="display: block;">
-        <canvas baseChart
-                [type]="'line'"
-                [data]="revenueLineData"
-                [options]="revenueLineOptions">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Ingresos Diarios</h3>
+        <span class="text-sm text-gray-500">
+          (Pagos cobrados por día)
+        </span>
+      </div>
+      <div class="h-64">
+        <canvas
+          baseChart
+          #revChart="base-chart"
+          [type]="'line'"
+          [data]="revenueLineData"
+          [options]="revenueLineOptions">
         </canvas>
       </div>
     </div>
@@ -51,11 +88,13 @@
     <!-- Gráfico de ocupación (Barras apiladas) -->
     <div class="bg-white shadow-lg rounded-xl p-6">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">Ocupación por Día</h3>
-      <div class="chart-container" style="display: block;">
-        <canvas baseChart
-                [type]="'bar'"
-                [data]="occupancyBarData"
-                [options]="occupancyBarOptions">
+      <div class="h-64">
+        <canvas
+          baseChart
+          #occBar="base-chart"
+          [type]="'bar'"
+          [data]="occupancyBarData"
+          [options]="occupancyBarOptions">
         </canvas>
       </div>
     </div>
@@ -63,11 +102,13 @@
     <!-- Gráfico de anillo (Ocupación de hoy) -->
     <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-md mx-auto lg:col-span-2">
       <h3 class="text-lg font-semibold text-gray-800 mb-4">Ocupación Actual (Hoy)</h3>
-      <div class="chart-container" style="display: block; max-height: 300px;">
-        <canvas baseChart
-                [type]="'doughnut'"
-                [data]="doughnutData"
-                [options]="doughnutOptions">
+      <div class="h-72">
+        <canvas
+          baseChart
+          #occDoughnut="base-chart"
+          [type]="'doughnut'"
+          [data]="doughnutData"
+          [options]="doughnutOptions">
         </canvas>
       </div>
     </div>

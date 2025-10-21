@@ -1,51 +1,68 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+// src/app/features/dashboard/dashboard.component.ts
+import { Component, OnInit, computed, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChartConfiguration } from 'chart.js';
-// Importa la directiva directamente
 import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration } from 'chart.js';
+import 'chart.js/auto';
+import { firstValueFrom } from 'rxjs';
 
-import 'chart.js/auto'; // ✅ registra Chart.js automáticamente
-import { firstValueFrom } from 'rxjs'; // ✅ para reemplazar toPromise
-import { ReportService, DailyRevenueItem, OccupancyItem } from '../../core/services/report.service';
-import { ApiService } from '../../core/services/api.service';
+import { ApiService, DayTotal } from '../../core/services/api.service';
+import { ReportService, OccupancyItem } from '../../core/services/report.service';
 
-function iso(d: Date) {
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+// ---------- Helpers de fecha en horario local ----------
+function localISO(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`; // YYYY-MM-DD
+}
+function monthBounds(yyyyMm: string) {
+  const [y, m] = yyyyMm.split('-').map(Number);
+  const start = new Date(y, m - 1, 1);
+  const end   = new Date(y, m, 0);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  return { start, end };
 }
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  // Usa BaseChartDirective en lugar de NgChartsModule
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit {
-  // rango: últimos 30 días
-  today = new Date();
-  start = new Date(new Date().setDate(this.today.getDate() - 29));
-  end = this.today;
+  // Charts refs (para forzar update)
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+  @ViewChild('occBar') occBarChart?: BaseChartDirective;
+  @ViewChild('occDoughnut') occDoughnutChart?: BaseChartDirective;
 
-  // tarjetas
+  // ====== RANGO: MES COMPLETO ======
+  selectedMonth = localISO(new Date()).slice(0, 7); // 'YYYY-MM'
+  start = monthBounds(this.selectedMonth).start;
+  end   = monthBounds(this.selectedMonth).end;
+
+  // ====== Tarjetas ======
   totalRooms = 0;
   occupiedToday = 0;
   availableToday = 0;
-  occupancyRateToday = 0; // 0..1
+  occupancyRateToday = 0;
 
-  // datos crudos
-  revenue = signal<DailyRevenueItem[]>([]);
-  occupancy = signal<OccupancyItem[]>([]);
+  // ====== Datos crudos ======
+  dayTotals = signal<DayTotal[]>([]);          // pagos por día (desde /reports/revenue)
+  occupancy  = signal<OccupancyItem[]>([]);    // ocupación por día
 
-  // métricas derivadas
+  // ====== Métricas derivadas ======
   totalRevenue = computed(() =>
-    this.revenue().reduce((acc, r) => acc + (Number(r.total) || 0), 0)
+    this.dayTotals().reduce((acc, d) => acc + (Number(d.total) || 0), 0)
   );
-  avgRevenue = computed(() =>
-    this.revenue().length ? Math.round(this.totalRevenue() / this.revenue().length) : 0
-  );
+  avgRevenue = computed(() => {
+    const days = Math.floor((this.end.getTime() - this.start.getTime()) / 86400000) + 1;
+    return days ? Math.round(this.totalRevenue() / days) : 0;
+  });
 
-  // ====== Chart.js configs ======
+  // ====== Configs Chart.js ======
   // Ingresos (línea/área)
   revenueLineData: ChartConfiguration<'line'>['data'] = {
     labels: [],
@@ -59,7 +76,6 @@ export class DashboardComponent implements OnInit {
       },
     ],
   };
-
   revenueLineOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -102,24 +118,32 @@ export class DashboardComponent implements OnInit {
 
   constructor(private api: ApiService, private reports: ReportService) {}
 
+  // ================== Ciclo de vida ==================
   ngOnInit(): void {
     this.load();
   }
 
+  // ================== Carga de datos ==================
   async load(): Promise<void> {
     this.loading = true;
     this.error = null;
 
-    const s = iso(this.start);
-    const e = iso(this.end);
+    // recalcula límites del mes (por si cambió selectedMonth)
+    const { start, end } = monthBounds(this.selectedMonth);
+    this.start = start;
+    this.end = end;
+
+    const s = localISO(this.start);
+    const e = localISO(this.end);
 
     try {
-      const [rev, occ] = await Promise.all([
-        firstValueFrom(this.reports.revenue(s, e)),
-        firstValueFrom(this.reports.occupancy(s, e)),
+      const [totals, occ] = await Promise.all([
+        firstValueFrom(this.api.revenueTotals(s, e)), // pagos agregados por día
+        firstValueFrom(this.reports.occupancy(s, e)), // ocupación
       ]);
-      this.revenue.set(rev ?? []);
+      this.dayTotals.set(totals ?? []);
       this.occupancy.set(occ ?? []);
+
       this.hydrateRevenueChart();
       this.hydrateOccupancyCharts();
     } catch (err: any) {
@@ -130,20 +154,41 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // ================== Charts: ingresos ==================
   private hydrateRevenueChart() {
-    const r = this.revenue();
-    const labels = r.map(x => (typeof x.day === 'string' ? x.day : x.day.toString()));
-    const data = r.map(x => Number(x.total || 0));
+    const rows = this.dayTotals(); // [{ day:'YYYY-MM-DD', total:number }]
+    const start = this.start, end = this.end;
 
+    // 1) labels día a día del rango
+    const labels: string[] = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      labels.push(localISO(d));
+    }
+
+    // 2) mapa fecha → total (relleno con 0)
+    const map = new Map<string, number>();
+    labels.forEach(l => map.set(l, 0));
+
+    // 3) sumar totales en su día
+    for (const r of rows) {
+      const key = (r.day || '').substring(0, 10);
+      if (key && map.has(key)) map.set(key, (map.get(key) || 0) + Number(r.total || 0));
+    }
+
+    // 4) set chart y update
     this.revenueLineData = {
       labels,
-      datasets: [{ ...this.revenueLineData.datasets[0], data }],
+      datasets: [
+        { ...this.revenueLineData.datasets[0], data: labels.map(k => map.get(k) || 0) }
+      ],
     };
+    this.chart?.update();
   }
 
+  // ================== Charts: ocupación ==================
   private hydrateOccupancyCharts() {
     const o = this.occupancy();
-    const labels = o.map(x => (typeof x.day === 'string' ? x.day : x.day.toString()));
+    const labels = o.map(x => (typeof x.day === 'string' ? x.day : String(x.day)));
     const occupied = o.map(x => Number(x.occupied || 0));
     const available = o.map(x => Number(x.available || 0));
 
@@ -155,63 +200,37 @@ export class DashboardComponent implements OnInit {
         { ...this.occupancyBarData.datasets[1], data: available },
       ],
     };
+    this.occBarChart?.update();
 
     // anillo “hoy”
-    const todayIso = iso(this.end);
-    const todayRow = o.find(x => {
-      const d = typeof x.day === 'string' ? x.day : new Date(x.day).toISOString().slice(0, 10);
-      return d === todayIso;
-    });
+    const todayIso = localISO(this.end);
+    const todayRow = o.find(x =>
+      (typeof x.day === 'string' ? x.day : new Date(x.day).toISOString().slice(0, 10)) === todayIso
+    );
 
     this.occupiedToday = todayRow?.occupied ?? 0;
     this.availableToday = todayRow?.available ?? 0;
     const total = this.occupiedToday + this.availableToday;
-    this.totalRooms = total; // inferimos
+    this.totalRooms = total;
     this.occupancyRateToday = total ? this.occupiedToday / total : 0;
 
     this.doughnutData = {
       labels: ['Ocupadas', 'Disponibles'],
       datasets: [{ data: [this.occupiedToday, this.availableToday] }],
     };
+    this.occDoughnutChart?.update();
   }
 
-  // util para cambiar rango rápido (7/30 días)
-  setRange(days: number) {
-    this.start = new Date(new Date().setDate(this.today.getDate() - (days - 1)));
+  // ================== Cambiar de mes ==================
+  onMonthChange(value: string) {        // value: 'YYYY-MM' desde <input type="month">
+    if (!value) return;
+    this.selectedMonth = value;
     this.load();
   }
-
-  private loadAll(): void {
-  // === INGRESOS DIARIOS ===
-  this.api.getRevenueByDay(this.start, this.end).subscribe({
-    next: (resp: any) => {
-      const arr = resp.data || []; // ApiResponse<List<DailyRevenueItem>>
-      const labels = arr.map((d: any) => d.date);
-      const values = arr.map((d: any) => d.total);
-      this.revenueLineData = {
-        labels,
-        datasets: [
-          { label: 'Ingresos (S/.)', data: values, borderColor: '#2563eb', fill: false }
-        ]
-      };
-    },
-    error: (err) => console.error('Error al obtener ingresos', err)
-  });
-
-  // === OCUPACIÓN POR DÍA ===
-  this.api.getOccupancyByDay(this.start, this.end).subscribe({
-    next: (resp: any) => {
-      const arr = resp.data || []; // ApiResponse<List<OccupancyItem>>
-      this.occupancyBarData = {
-        labels: arr.map((d: any) => d.date),
-        datasets: [
-          { label: 'Ocupadas', data: arr.map((d: any) => d.occupied), stack: 'occ' },
-          { label: 'Disponibles', data: arr.map((d: any) => d.available), stack: 'occ' },
-          { label: 'Mantenimiento', data: arr.map((d: any) => d.maintenance || 0), stack: 'occ' }
-        ]
-      };
-    },
-    error: (err) => console.error('Error al obtener ocupación', err)
-  });
-}
+  shiftMonth(delta: number) {           // -1 anterior, +1 siguiente
+    const [y, m] = this.selectedMonth.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    this.selectedMonth = localISO(d).slice(0, 7);
+    this.load();
+  }
 }

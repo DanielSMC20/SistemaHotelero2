@@ -11,6 +11,12 @@ import { RouterModule, Router } from '@angular/router';
   styleUrls: ['./sidebar.component.css'],
 })
 export class SidebarComponent {
+closeSidebar() {
+throw new Error('Method not implemented.');
+}
+isOpen(): any {
+throw new Error('Method not implemented.');
+}
   
   
 
