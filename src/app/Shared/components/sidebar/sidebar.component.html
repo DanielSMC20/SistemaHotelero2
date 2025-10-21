@@ -10,7 +10,7 @@
   <div class="relative border-b border-white/20">
     <a class="flex items-center gap-4 py-6 px-8" routerLink="dashboard" (click)="closeSidebar()">
       <h6 class="block antialiased tracking-normal font-sans text-base font-semibold leading-relaxed text-white">
-        Sistema Hotelero
+        Hospedaje Betania
       </h6>
     </a>
     <!-- Botón cerrar -->
@@ -18,43 +18,37 @@
       class="w-8 h-8 rounded-lg text-xs text-white hover:bg-white/10 active:bg-white/30 absolute right-0 top-0 grid xl:hidden"
       type="button">
       <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-             stroke-width="2.5" stroke="currentColor" class="h-5 w-5 text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5 text-white">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
         </svg>
       </span>
     </button>
   </div>
 
-  <div class="m-4 flex flex-col h-[calc(100%-2rem)] justify-between">
-    <div>
-      <ul class="mb-4 flex flex-col gap-1">
-        <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-          <a routerLink="dashboard" (click)="closeSidebar()">
-            <button
-              class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md hover:shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                   fill="currentColor" class="w-5 h-5">
-                <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z"/>
-                <path d="M12 5.432l8.159 8.159v6.198A1.875 1.875 0 0118.284 21H15v-4.5h-6V21H5.716A1.875 1.875 0 013.84 19.789V13.59L12 5.432z"/>
-              </svg>
-              <p class="text-base font-medium">Dashboard</p>
-            </button>
-          </a>
-        </li>
+  <div class="m-4">
+    <ul class="mb-4 flex flex-col gap-1">
+      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="dashboard">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md hover:shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z"/>
+              <path d="M12 5.432l8.159 8.159v6.198A1.875 1.875 0 0118.284 21H15v-4.5h-6V21H5.716A1.875 1.875 0 013.84 19.789V13.59L12 5.432z"/>
+            </svg>
+            <p class="text-base font-medium">Dashboard</p>
+          </button>
+        </a>
+      </li>
 
-        <li routerLinkActive="active">
-          <a routerLink="rooms" (click)="closeSidebar()">
-            <button
-              class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                   viewBox="0 0 24 24" class="w-5 h-5">
-                <path d="M3 6a2 2 0 012-2h14a2 2 0 012 2v12h1a1 1 0 110 2H2a1 1 0 110-2h1V6zm2 0v12h14V6H5z"/>
-              </svg>
-              <p class="text-base font-medium">Habitaciones</p>
-            </button>
-          </a>
-        </li>
+      <li routerLinkActive="active">
+        <a routerLink="rooms">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+              <path d="M3 6a2 2 0 012-2h14a2 2 0 012 2v12h1a1 1 0 110 2H2a1 1 0 110-2h1V6zm2 0v12h14V6H5z"/>
+            </svg>
+            <p class="text-base font-medium">Habitaciones</p>
+          </button>
+        </a>
+      </li>
 
         <li routerLinkActive="active">
           <a routerLink="reservations" (click)="closeSidebar()">
@@ -84,81 +78,34 @@
           </a>
         </li>
 
-        <li routerLinkActive="active">
-          <a routerLink="checkin" (click)="closeSidebar()">
-            <button
-              class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                   viewBox="0 0 24 24" class="w-5 h-5">
-                <path fill-rule="evenodd"
-                      d="M4.5 3.75h15v18h-15V3.75zM8 8h8v1.5H8V8zm0 3h5v1.5H8V11z"
-                      clip-rule="evenodd"/>
-              </svg>
-              <p class="text-base font-medium">Check-in / Check-out</p>
-            </button>
-          </a>
-        </li>
-      </ul>
-
-      <ul class="mb-4 flex flex-col gap-1">
-        <li class="mx-3.5 mt-4 mb-2">
-          <p class="text-sm text-white font-black uppercase opacity-75">Auth Pages</p>
-        </li>
-        <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-          <a routerLink="/login" (click)="closeSidebar()">
-            <button
-              class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                   viewBox="0 0 24 24" class="w-5 h-5">
-                <path fill-rule="evenodd"
-                      d="M7.5 3.75h6A3 3 0 0116.5 6.75V9H9a.75.75 0 000 1.5h7.5l1.72-1.72a.75.75 0 111.06 1.06l-3 3a.75.75 0 11-1.06-1.06L16.5 10.5H9A2.25 2.25 0 016.75 8.25V6.75A3 3 0 017.5 3.75z"
-                      clip-rule="evenodd"/>
-              </svg>
-              <p class="text-base font-medium">Iniciar sesión</p>
-            </button>
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Zona inferior del usuario -->
-<div class="mt-auto border-t border-white/10 pt-4 px-4">
-  <!-- Si el usuario está logueado -->
-  <div *ngIf="isLoggedIn" class="flex items-center gap-3">
-    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 text-white font-bold">
-      {{ initials }}
-    </div>
-    <div class="min-w-0">
-      <p class="text-sm text-white font-semibold truncate">{{ userName }}</p>
-      <p class="text-xs text-white/70 truncate">{{ userRole }}</p>
-    </div>
-    <button (click)="logout()" class="ml-auto text-xs text-white hover:bg-white/10 rounded-lg px-3 py-2">
-      Salir
+      <li routerLinkActive="active">
+        <a routerLink="checkin">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+              <path fill-rule="evenodd" d="M4.5 3.75h15v18h-15V3.75zM8 8h8v1.5H8V8zm0 3h5v1.5H8V11z" clip-rule="evenodd"/>
+            </svg>
+            <p class="text-base font-medium">Check-in / Check-out</p>
+          </button>
+        </a>
+      </li>
+      <li routerLinkActive="active">
+  <a routerLink="reports">
+    <button
+      class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+        viewBox="0 0 24 24" class="w-5 h-5">
+        <path d="M6 2a2 2 0 00-2 2v16c0 1.1.9 2 2 2h12a2 
+        2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 
+        3h5v1.5H8V16z" />
+      </svg>
+      <p class="text-base font-medium">Reportes</p>
     </button>
-  </div>
+  </a>
+</li>
 
-  <!-- Si NO hay usuario logueado -->
-  <div *ngIf="!isLoggedIn">
-    <a routerLink="/login">
-      <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
-          <path fill-rule="evenodd"
-                d="M7.5 3.75h6A3 3 0 0116.5 6.75V9H9a.75.75 0 000 1.5h7.5l1.72-1.72a.75.75 0 111.06 1.06l-3 3a.75.75 0 11-1.06-1.06L16.5 10.5H9A2.25 2.25 0 016.75 8.25V6.75A3 3 0 017.5 3.75z"
-                clip-rule="evenodd"/>
-        </svg>
-        <p class="text-base font-medium">Iniciar sesión</p>
-      </button>
-    </a>
-  </div>
-</div>
 
-<!-- BOTÓN FLOTANTE MÓVIL -->
-<button
-  class="xl:hidden fixed left-4 bottom-6 z-40 rounded-full p-3 bg-gray-900 text-white shadow-lg hover:scale-105 transition"
-  (click)="toggleSidebar()"
-  aria-label="Abrir menú">
-  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
-       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10" />
-  </svg>
-</button>
+    </ul>
+
+  
+  </div>
+</aside>

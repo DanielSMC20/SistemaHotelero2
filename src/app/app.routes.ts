@@ -7,7 +7,8 @@ import { DashboardComponent } from './business/dashboard/dashboard.component';
 import { RoomListComponent } from './business/rooms/components/room-list/room-list.component';
 import { ReservationListComponent } from './business/reservations/components/reservation-list/reservation-list.component';
 import { GuestListComponent } from './business/guests/components/guest-list/guest-list.component';
-import { TodayActivitiesComponent } from './business/checkin-checkout/components/today-activities/today-activities.component';
+import { TodayActivitiesComponent } from './business/checkin-checkout/components/ui/today-activities.component';
+import { ReportsComponent } from './business/reports/reports.component';
 
 import { AuthGuard } from './core/guards/auth.guard';
 
@@ -27,6 +28,8 @@ export const routes: Routes = [
       { path: 'reservations', component: ReservationListComponent },
       { path: 'guests', component: GuestListComponent },
       { path: 'checkin', component: TodayActivitiesComponent },
+      {path:'reports', component:ReportsComponent},
+
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

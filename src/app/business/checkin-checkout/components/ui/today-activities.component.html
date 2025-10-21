@@ -1,0 +1,25 @@
+<div class="p-4">
+  <ejs-schedule
+    height="650px"
+    [selectedDate]="selectedDate"
+    [eventSettings]="eventSettings"
+    [group]="group"
+    [resources]="roomResources"
+    [currentView]="'TimelineWeek'"
+    [startHour]="'06:00'"
+    [endHour]="'23:00'"
+  >
+    <e-resources>
+      <e-resource
+        field="RoomId"
+        title="Habitación"
+        name="Rooms"
+        [dataSource]="rooms"
+        textField="Text"
+        idField="Id"
+        colorField="Color"
+      >
+      </e-resource>
+    </e-resources>
+  </ejs-schedule>
+</div>
