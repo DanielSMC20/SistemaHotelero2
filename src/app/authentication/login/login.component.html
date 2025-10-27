@@ -20,17 +20,23 @@
 
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label for="password" class="block text-sm font-medium">Contraseña</label>
-            <a class="text-sm text-indigo-400 hover:text-indigo-300 font-medium" href="#"
-              (click)="onSubmit(); $event.preventDefault()">¿Olvidaste tu contraseña?</a>
-          </div>
-          <div class="relative">
-            <input id="password" type="password" autocomplete="current-password"
-              class="w-full rounded-xl bg-slate-900/60 border border-slate-800 px-4 py-2.5 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors pr-10"
-              placeholder="••••••••" formControlName="password">
+  <label for="password" class="block text-sm font-medium">Contraseña</label>
+ <a class="text-sm text-indigo-400 hover:text-indigo-300 font-medium"
+   [routerLink]="['/forgot-password']">
+  ¿Olvidaste tu contraseña?
+</a>
+</div>
+
+<div class="relative">
+  <input id="password"
+         [type]="showPassword ? 'text' : 'password'"  
+         autocomplete="current-password"
+         class="w-full rounded-xl bg-slate-900/60 border border-slate-800 px-4 py-2.5 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors pr-10"
+         placeholder="••••••••" formControlName="password">
 
             <button type="button" (click)="togglePasswordVisibility()"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center" title="Mostrar/Ocultar contraseña">
+          class="absolute inset-y-0 right-0 pr-3 flex items-center" title="Mostrar/Ocultar contraseña">
+    
               <svg *ngIf="!showPassword" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

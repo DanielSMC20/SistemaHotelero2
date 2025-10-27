@@ -8,6 +8,8 @@ import {
 } from '../domain/reservation.interface';
 import { Habitacion } from '../../../core/models/models';
 import { environment } from '../../../../environments/environment';
+import { PhoneCodeApi, PhoneCodeUI } from '../../../core/models/models';
+
 
 @Injectable({ providedIn: 'root' })
 export class ReservationInfraestructure {
@@ -147,7 +149,7 @@ export class ReservationInfraestructure {
   checkIn(id: number): Observable<Reserva> {
     const headers = this.getAuthHeaders();
     return this.http
-      .patch<any>(`${this.RES_URL}/${id}/checkin`, null, { headers })
+      .patch<any>(`${this.RES_URL}/${id}/checkin`, {}, { headers })
       .pipe(map(this.fromApi));
   }
 
@@ -244,4 +246,10 @@ export class ReservationInfraestructure {
       { headers: this.getAuthHeaders() }
     );
   }
+
+getPhoneCodes() {
+  const headers = this.getAuthHeaders();
+  return this.http.get<PhoneCodeApi[]>(`${this.API}/phone-codes`, { headers });
+}
+
 }

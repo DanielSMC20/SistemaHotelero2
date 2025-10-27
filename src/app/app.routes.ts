@@ -18,6 +18,18 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./authentication/login/login.component').then(m => m.LoginComponent),
   },
+    {
+  path: 'reset-password',
+  loadComponent: () =>
+    import('./authentication/reset-password/reset-password.component')
+      .then(m => m.ResetPasswordComponent),
+},
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./authentication/forgot-password/forgot-password.component')
+        .then(m => m.ForgotPasswordComponent)
+  },
   {
     path: 'layout',
     canActivate: [AuthGuard],
@@ -33,6 +45,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
+
 
   { path: '**', redirectTo: 'login' },
 ];

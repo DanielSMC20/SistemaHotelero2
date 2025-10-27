@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Reserva } from '../../reservations/domain/reservation.interface';
 import { PaymentModalComponent } from '../../../components/payment-modal.component';
@@ -15,14 +15,14 @@ type Mode = 'checkin' | 'checkout' | 'both';
   templateUrl: './check-center.component.html',
   styleUrls: ['./check-center.component.css']
 })
-export class CheckCenterComponent implements OnChanges {
+export class CheckCenterComponent implements OnInit, OnChanges {
   /** Todas las reservas que quieras mostrar (por fecha de hoy o lo que toque) */
   @Input() reservas: Reserva[] = [];
   @Input() mode: Mode = 'both';
   /** ocultar cabecera (para embebidos en páginas) */
   @Input() hideHeader = false;
 
-  /** Eventos hacia afuera */
+  /** Eventos hacia afuera (opcional, por si un contenedor superior quiere escuchar) */
   @Output() doCheckIn = new EventEmitter<Reserva>();
   @Output() doCheckOut = new EventEmitter<Reserva>();
 
@@ -41,13 +41,13 @@ export class CheckCenterComponent implements OnChanges {
   stays: Reserva[] = [];
 
   // ===== Helpers =====
-private norm(s: any) {
-  return (s ?? '').toString().trim().toUpperCase();
-}  private state(r?: Reserva | null) { return this.norm(r?.estado).toUpperCase(); }
+  private norm(s: any) { return (s ?? '').toString().trim().toUpperCase(); }
+  private state(r?: Reserva | null) { return this.norm(r?.estado); }
 
   ngOnInit(): void {
     this.refresh(); // ✅ Llama la API al iniciar
   }
+
   ngOnChanges(_: SimpleChanges): void {
     // tab por modo
     this.tab = (this.mode === 'checkout') ? 'stays' : 'arrivals';
@@ -99,13 +99,13 @@ private norm(s: any) {
   canCheckIn(r?: Reserva | null) { return !!r && this.state(r) === 'RESERVADO'; }
   canCheckOut(r?: Reserva | null) { return !!r && this.state(r) === 'CHECKED_IN'; }
 
-  // Acción primaria: check-in directo, check-out abre modal de pago
+  // Acción primaria: AHORA sí pega check-in
   primaryAction() {
     if (this.canCheckIn(this.selected)) {
-      // Emitimos por si el padre quiere escuchar
+      // Llama a la API directamente
+      this.onDoCheckIn(this.selected!);
+      // Y si quieres, además emite hacia arriba
       this.doCheckIn.emit(this.selected!);
-      // También puedes ejecutar aquí directamente el check-in si prefieres:
-      // this.onDoCheckIn(this.selected!);
       return;
     }
 
@@ -143,20 +143,20 @@ private norm(s: any) {
         this.onCheckOutAfterPayment(this.facturaSeleccionada.reservationId);
         this.cerrarModalPago();
         Swal.fire({
-  icon: 'success',
-  title: 'Pago completado con éxito',
-  text: 'El check-out se ha registrado correctamente.',
-  confirmButtonColor: '#2563eb'
-});
+          icon: 'success',
+          title: 'Pago completado con éxito',
+          text: 'El check-out se ha registrado correctamente.',
+          confirmButtonColor: '#2563eb'
+        });
       },
       error: (err: any) => {
         console.error('Error al registrar el pago', err);
-        alert('Error al registrar el pago');Swal.fire({
-  icon: 'error',
-  title: 'Error al registrar el pago',
-  text: 'Verifica la conexión o el servidor.',
-  confirmButtonColor: '#dc2626'
-});
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al registrar el pago',
+          text: 'Verifica la conexión o el servidor.',
+          confirmButtonColor: '#dc2626'
+        });
       },
     });
   }
@@ -166,15 +166,23 @@ private norm(s: any) {
     this.reser.checkIn(r.id).subscribe({
       next: () => {
         this.refresh();
+        Swal.fire({
+          icon: 'success',
+          title: 'Check-in registrado',
+          confirmButtonColor: '#16a34a'
+        });
       },
-      error: (e) => console.error(e)
+      error: (e) => {
+        console.error(e);
+        Swal.fire({ icon: 'error', title: 'No se pudo hacer check-in' });
+      }
     });
   }
 
   onDoCheckOut(r: Reserva) {
     this.reser.checkOut(r.id).subscribe({
       next: () => {
-        this.doCheckOut.emit(r);
+        this.doCheckOut.emit(r); // por si otro componente padre quiere escuchar
         this.refresh();
       },
       error: (e) => console.error(e)

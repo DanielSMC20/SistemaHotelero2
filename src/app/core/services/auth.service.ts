@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, tap, catchError, pairs } from 'rxjs';
+import { BehaviorSubject, Observable, of, tap, catchError} from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { env } from '../environments/environment';
 
@@ -59,23 +59,24 @@ login(username: string, password: string): Observable<any> {
   }
 
   // 👉 Restaura sesión al recargar la página
-  restoreSession(): void {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('currentUser');
+restoreSession(): void {
+  const token = localStorage.getItem('token');
+  const storedUser = localStorage.getItem('currentUser');
 
-    if (!token || !storedUser || storedUser === 'undefined' || storedUser === 'null') {
-      this.logout();
-      return;
-    }
-
-    try {
-      const user = JSON.parse(storedUser);
-      this.currentUserSubject.next(user);
-    } catch (e) {
-      console.error('Error restaurando sesión:', e);
-      this.logout();
-    }
+  if (!token || !this.isTokenValid(token) || !storedUser || storedUser === 'undefined' || storedUser === 'null') {
+    this.logout();
+    return;
   }
+
+  try {
+    const user = JSON.parse(storedUser);
+    this.currentUserSubject.next(user);
+  } catch (e) {
+    console.error('Error restaurando sesión:', e);
+    this.logout();
+  }
+}
+
 
   // 👉 Obtener token
   getToken(): string | null {
@@ -84,7 +85,9 @@ login(username: string, password: string): Observable<any> {
 
   // 👉 Saber si el usuario está autenticado
   get isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    return !!token && this.isTokenValid(token);
+
   }
 
   // 👉 Cerrar sesión
@@ -98,4 +101,37 @@ login(username: string, password: string): Observable<any> {
   get currentUser() {
     return this.currentUserSubject.value;
   }
+
+private isTokenValid(token: string): boolean {
+  try {
+    const payloadPart = token.split('.')[1];
+    if (!payloadPart) return false;
+
+    const payload = JSON.parse(atob(payloadPart));
+    // Si tu JWT trae exp (en segundos):
+    if (typeof payload?.exp === 'number') {
+      const expMs = payload.exp * 1000;
+      // margen opcional de 30s para evitar carreras de tiempo
+      return expMs - 30_000 > Date.now();
+    }
+
+    // Si no hay exp, al menos considera el token como inválido
+    // o retorna true si tu backend no firma con exp.
+    return false;
+  } catch {
+    return false;
+  }
+}
+  requestPasswordReset(emailOrUser: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post(`${API}/auth/forgot`, { emailOrUser }, { headers });
+  }
+
+  /** Cambia la contraseña con token */
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post(`${API}/auth/reset`, { token, newPassword }, { headers });
+  }
+
+
 }

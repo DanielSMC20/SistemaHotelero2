@@ -9,6 +9,7 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthUser } from '../../core/models/models';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -27,7 +28,8 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient, 
   ) {}
 
   ngOnInit(): void {
@@ -101,6 +103,28 @@ private redirectBasedOnRole(): void {
 
   get password() {
     return this.loginForm.get('password');
+  }
+
+  openForgot(evt: Event): void {
+    evt.preventDefault();
+    const emailOrUser = prompt('Ingresa tu email o usuario para recuperar tu contraseña:');
+    if (!emailOrUser) { return; }
+
+    this.authService.requestPasswordReset(emailOrUser).subscribe({
+      next: (resp) => {
+        // En DEV, tu backend devuelve devToken. Lo aprovechamos:
+        const devToken = resp?.devToken;
+        if (devToken) {
+          alert(`(DEV) Usa este token para resetear: ${devToken}\nTe llevaré a la pantalla para cambiar tu contraseña.`);
+          this.router.navigate(['/reset-password'], { queryParams: { token: devToken } });
+        } else {
+          alert('Si existe una cuenta asociada, recibirás un correo con instrucciones.');
+        }
+      },
+      error: () => {
+        alert('Si existe una cuenta asociada, recibirás un correo con instrucciones.');
+      },
+    });
   }
 
 

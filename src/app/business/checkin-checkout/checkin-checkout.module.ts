@@ -6,7 +6,7 @@
   import { DropDownListModule } from '@syncfusion/ej2-angular-dropdowns';
   import { ButtonModule } from '@syncfusion/ej2-angular-buttons';
 
-  import { TodayActivitiesComponent } from '../checkin-checkout/components/ui/today-activities.component'; // 👈 importa tu componente
+  import { TodayActivitiesComponent } from '../checkin-checkout/components/today-activities/today-activities.component'; // 👈 importa tu componente
 
   @NgModule({
     imports: [

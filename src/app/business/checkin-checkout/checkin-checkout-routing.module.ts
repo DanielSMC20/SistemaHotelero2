@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { TodayActivitiesComponent } from './components/ui/today-activities.component';
+import { TodayActivitiesComponent } from './components/today-activities/today-activities.component';
 
 const routes: Routes = [
   {

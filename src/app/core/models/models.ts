@@ -3,6 +3,8 @@ import { TipoHabitacion, Rol } from './enums';
 
 // === Clientes ===
 export interface Cliente {
+  razonSocial: string;
+  tipoPersona: any;
   id: number;
   documento: string;
   nombresCompletos: string; // mapea @Column(name="nombres_completos")
@@ -68,4 +70,16 @@ export interface Invoice {
   status: string;      // PENDIENTE | PAGADA | ANULADA
   issuedAt: string;    // ISO
 }
+export interface PhoneCodeApi {
+  country: string;
+  iso2: string;
+  dialCode: string;
+  flag?: string;
+}
 
+// Modelo que usa la UI
+export interface PhoneCodeUI {
+  code: string;   // ej. "+51"
+  label: string;  // ej. "Perú"
+  flag?: string;  // opcional
+}
