@@ -6,14 +6,13 @@
   class="bg-gradient-to-br from-gray-800 to-gray-900 fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0"
   [class.-translate-x-80]="!isOpen()"
   [class.translate-x-0]="isOpen()">
-  
+
   <div class="relative border-b border-white/20">
-    <a class="flex items-center gap-4 py-6 px-8" routerLink="dashboard" (click)="closeSidebar()">
+    <a class="flex items-center gap-4 py-6 px-8" (click)="closeSidebar()">
       <h6 class="block antialiased tracking-normal font-sans text-base font-semibold leading-relaxed text-white">
         Hospedaje Betania
       </h6>
     </a>
-    <!-- Botón cerrar -->
     <button (click)="closeSidebar()"
       class="w-8 h-8 rounded-lg text-xs text-white hover:bg-white/10 active:bg-white/30 absolute right-0 top-0 grid xl:hidden"
       type="button">
@@ -27,9 +26,13 @@
 
   <div class="m-4">
     <ul class="mb-4 flex flex-col gap-1">
-      <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="dashboard">
-          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md hover:shadow-lg">
+
+      <!-- DASHBOARD -->
+      <li *appHasRol="['ADMIN','GERENTE']" 
+          routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md"
+          [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="dashboard" (click)="closeSidebar()">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
               <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z"/>
               <path d="M12 5.432l8.159 8.159v6.198A1.875 1.875 0 0118.284 21H15v-4.5h-6V21H5.716A1.875 1.875 0 013.84 19.789V13.59L12 5.432z"/>
@@ -39,9 +42,11 @@
         </a>
       </li>
 
-      <li routerLinkActive="active">
-        <a routerLink="rooms">
-          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
+      <!-- HABITACIONES -->
+      <li *appHasRol="['ADMIN','RECEPCIONISTA']"
+          routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md">
+        <a routerLink="rooms" (click)="closeSidebar()">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
               <path d="M3 6a2 2 0 012-2h14a2 2 0 012 2v12h1a1 1 0 110 2H2a1 1 0 110-2h1V6zm2 0v12h14V6H5z"/>
             </svg>
@@ -50,37 +55,37 @@
         </a>
       </li>
 
-        <li routerLinkActive="active">
-          <a routerLink="reservations" (click)="closeSidebar()">
-            <button
-              class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                   viewBox="0 0 24 24" class="w-5 h-5">
-                <path d="M5 3a2 2 0 00-2 2v16l7-3 7 3V5a2 2 0 00-2-2H5z"/>
-              </svg>
-              <p class="text-base font-medium">Reservas</p>
-            </button>
-          </a>
-        </li>
+      <!-- RESERVAS -->
+      <li *appHasRol="['ADMIN','RECEPCIONISTA']"
+          routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md">
+        <a routerLink="reservations" (click)="closeSidebar()">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+              <path d="M5 3a2 2 0 00-2 2v16l7-3 7 3V5a2 2 0 00-2-2H5z"/>
+            </svg>
+            <p class="text-base font-medium">Reservas</p>
+          </button>
+        </a>
+      </li>
 
-        <li routerLinkActive="active">
-          <a routerLink="guests" (click)="closeSidebar()">
-            <button
-              class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                   viewBox="0 0 24 24" class="w-5 h-5">
-                <path fill-rule="evenodd"
-                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm-9 8a9 9 0 1118 0H3z"
-                      clip-rule="evenodd"/>
-              </svg>
-              <p class="text-base font-medium">Huéspedes</p>
-            </button>
-          </a>
-        </li>
+      <!-- HUÉSPEDES -->
+      <li *appHasRol="['ADMIN','RECEPCIONISTA']"
+          routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md">
+        <a routerLink="guests" (click)="closeSidebar()">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+              <path fill-rule="evenodd" d="M12 12a5 5 0 100-10 5 5 0 000 10zm-9 8a9 9 0 1118 0H3z" clip-rule="evenodd"/>
+            </svg>
+            <p class="text-base font-medium">Huéspedes</p>
+          </button>
+        </a>
+      </li>
 
-      <li routerLinkActive="active">
-        <a routerLink="checkin">
-          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
+      <!-- CHECK-IN / CHECK-OUT -->
+      <li *appHasRol="['ADMIN','RECEPCIONISTA']"
+          routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md">
+        <a routerLink="checkin" (click)="closeSidebar()">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
               <path fill-rule="evenodd" d="M4.5 3.75h15v18h-15V3.75zM8 8h8v1.5H8V8zm0 3h5v1.5H8V11z" clip-rule="evenodd"/>
             </svg>
@@ -88,24 +93,20 @@
           </button>
         </a>
       </li>
-      <li routerLinkActive="active">
-  <a routerLink="reports">
-    <button
-      class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-        viewBox="0 0 24 24" class="w-5 h-5">
-        <path d="M6 2a2 2 0 00-2 2v16c0 1.1.9 2 2 2h12a2 
-        2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 
-        3h5v1.5H8V16z" />
-      </svg>
-      <p class="text-base font-medium">Reportes</p>
-    </button>
-  </a>
-</li>
 
+      <!-- REPORTES -->
+      <li *appHasRol="['ADMIN','GERENTE']"
+          routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md">
+        <a routerLink="reports" (click)="closeSidebar()">
+          <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+              <path d="M6 2a2 2 0 00-2 2v16c0 1.1.9 2 2 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h5v1.5H8V16z"/>
+            </svg>
+            <p class="text-base font-medium">Reportes</p>
+          </button>
+        </a>
+      </li>
 
     </ul>
-
-  
   </div>
 </aside>

@@ -7,7 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthService, ForgotResponse } from '../../core/services/auth.service';
 import { AuthUser } from '../../core/models/models';
 import { HttpClient } from '@angular/common/http';
 
@@ -73,24 +73,14 @@ export class LoginComponent implements OnInit {
 
 
 private redirectBasedOnRole(): void {
-  const user = this.authService.currentUser;
-
-  if (!user) {
-    this.router.navigate(['/layout/dashboard']);
-    return;
-  }
-
-  switch (user.role) {
-    case 'RECEPCIONISTA':
-      this.router.navigate(['/layout/checkin']);   // 👈 con prefijo
-      break;
-    case 'ADMIN':
-    case 'GERENTE':
-    default:
-      this.router.navigate(['/layout/dashboard']); // 👈 con prefijo
-      break;
+  const role = (this.authService.currentUser?.role || '').toUpperCase();
+  if (role === 'RECEPCIONISTA') {
+    this.router.navigate(['/layout', 'reservations']); // 👈 “reservar”
+  } else {
+    this.router.navigate(['/layout', 'dashboard']);
   }
 }
+
 
 
   togglePasswordVisibility(): void {
@@ -105,27 +95,27 @@ private redirectBasedOnRole(): void {
     return this.loginForm.get('password');
   }
 
-  openForgot(evt: Event): void {
-    evt.preventDefault();
-    const emailOrUser = prompt('Ingresa tu email o usuario para recuperar tu contraseña:');
-    if (!emailOrUser) { return; }
+openForgot(evt: Event): void {
+  evt.preventDefault();
+  const emailOrUser = prompt('Ingresa tu email o usuario para recuperar tu contraseña:');
+  if (!emailOrUser) return;
 
-    this.authService.requestPasswordReset(emailOrUser).subscribe({
-      next: (resp) => {
-        // En DEV, tu backend devuelve devToken. Lo aprovechamos:
-        const devToken = resp?.devToken;
-        if (devToken) {
-          alert(`(DEV) Usa este token para resetear: ${devToken}\nTe llevaré a la pantalla para cambiar tu contraseña.`);
-          this.router.navigate(['/reset-password'], { queryParams: { token: devToken } });
-        } else {
-          alert('Si existe una cuenta asociada, recibirás un correo con instrucciones.');
-        }
-      },
-      error: () => {
+  this.authService.requestPasswordReset(emailOrUser).subscribe({
+    next: (resp: ForgotResponse) => {
+      const devToken = resp.devToken; // ✅ ya no marca error
+
+      if (devToken) {
+        alert(`(DEV) Usa este token para resetear: ${devToken}\nTe llevaré a la pantalla para cambiar tu contraseña.`);
+        this.router.navigate(['/reset-password'], { queryParams: { token: devToken } });
+      } else {
         alert('Si existe una cuenta asociada, recibirás un correo con instrucciones.');
-      },
-    });
-  }
+      }
+    },
+    error: () => {
+      alert('Si existe una cuenta asociada, recibirás un correo con instrucciones.');
+    },
+  });
+}
 
 
 }

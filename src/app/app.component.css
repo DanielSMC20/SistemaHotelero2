@@ -38,3 +38,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.menu-btn {
+  @apply text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 active:bg-white/30;
+}
+
+.menu-btn--active {
+  @apply bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md;
+}
