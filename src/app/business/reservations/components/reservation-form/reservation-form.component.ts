@@ -14,6 +14,7 @@ import { ReservationInfraestructure } from '../../infraestructure/reservation.in
 import { Reserva } from '../../domain/reservation.interface';
 import { Habitacion } from '../../../../core/models/models';
 import { PhoneCodeApi, PhoneCodeUI } from '../../../../core/models/models';
+import Swal from 'sweetalert2';
 
 type PhoneRule = { min: number; max: number };
 
@@ -50,7 +51,7 @@ export class ReservationFormComponent implements OnInit {
 
   form!: FormGroup;
 
-phoneCodes: PhoneCodeUI[] = [];
+  phoneCodes: PhoneCodeUI[] = [];
 
   // Reglas de longitud por país (local, SIN prefijo)
   private PHONE_RULES: Record<string, PhoneRule> = {
@@ -127,7 +128,7 @@ phoneCodes: PhoneCodeUI[] = [];
     this.loadRooms();
     this.prefillIfEditing();
     this.loadPhoneCodes();
-    this.loadPhoneCodes();   
+    this.loadPhoneCodes();
 
     this.form
       .get('phoneCountryCode')!
@@ -146,32 +147,45 @@ phoneCodes: PhoneCodeUI[] = [];
 
     this.form.valueChanges.subscribe(() => this.syncDates());
 
+    // 🔹 Cambios cuando sea por horas / por noche
+    this.form
+      .get('reservaPorHoras')!
+      .valueChanges.subscribe(() => this.onReservaTipoChange());
+
     // aplicar validadores iniciales
     this.updatePhoneValidators();
     this.updateDocumentoValidators();
+    this.onReservaTipoChange();
   }
-private prefillIfEditing() {
-  if (!this.editing) return;
-  const e = this.editing;
-  this.form.patchValue({
-    tipoPersona: e.cliente?.tipoPersona || 'NATURAL',
-    tipoDocumento: e.cliente?.tipoDocumento || 'DNI',
-    documento: e.cliente?.documento || '',
-    nombresCompletos: e.cliente?.nombresCompletos || e.cliente?.razonSocial || '',
-    email: e.cliente?.email || '',
-    phoneCountryCode: '+51',           // si guardas separado en backend, mapéalo aquí
-    telefono: (e.cliente?.telefono || '').replace(/\D/g, ''),
 
-    checkIn: this.toYMD(e.checkIn),
-    checkOut: this.toYMD(e.checkOut),
-    roomId: String(e.habitacion?.id ?? '')
-  });
+  private prefillIfEditing() {
+    if (!this.editing) return;
+    const e = this.editing;
+    this.form.patchValue({
+      tipoPersona: e.cliente?.tipoPersona || 'NATURAL',
+      tipoDocumento: e.cliente?.tipoDocumento || 'DNI',
+      documento: e.cliente?.documento || '',
+      nombresCompletos:
+        e.cliente?.nombresCompletos || e.cliente?.razonSocial || '',
+      email: e.cliente?.email || '',
+      phoneCountryCode: '+51', // si guardas separado en backend, mapéalo aquí
+      telefono: (e.cliente?.telefono || '').replace(/\D/g, ''),
 
-  // actualiza mínimos y validadores dependientes
-  this.minOut = this.form.value.checkIn || this.minIn;
-  this.updateDocumentoValidators();
-  this.updatePhoneValidators();
-}
+      checkIn: this.toYMD(e.checkIn),
+      checkOut: this.toYMD(e.checkOut),
+      roomId: String(e.habitacion?.id ?? ''),
+
+      // si tu Reserva ya tiene estos campos:
+      reservaPorHoras: (e as any).reservaPorHoras ?? false,
+      horas: (e as any).horas ?? null,
+    });
+
+    // actualiza mínimos y validadores dependientes
+    this.minOut = this.form.value.checkIn || this.minIn;
+    this.updateDocumentoValidators();
+    this.updatePhoneValidators();
+    this.onReservaTipoChange();
+  }
 
   // ============ Form & validators ============
   private buildForm() {
@@ -203,6 +217,10 @@ private prefillIfEditing() {
         phoneCountryCode: ['+51', Validators.required],
         telefono: ['', [Validators.pattern(/^\d*$/)]], // min/max dinámico
 
+        // 🔹 Tipo de reserva
+        reservaPorHoras: [false], // false = por noche, true = por horas
+        horas: [null], // validación dinámica si es por horas
+
         // Fechas y room
         checkIn: [this.minIn, Validators.required],
         checkOut: [this.minOut, Validators.required],
@@ -211,6 +229,37 @@ private prefillIfEditing() {
       { validators: [this.checkOutNotBeforeCheckIn] }
     );
   }
+
+private onReservaTipoChange() {
+  const esPorHoras = !!this.form.get('reservaPorHoras')!.value;
+  const horasCtrl = this.form.get('horas')!;
+  const checkInCtrl = this.form.get('checkIn')!;
+  const checkOutCtrl = this.form.get('checkOut')!;
+
+  if (esPorHoras) {
+    // horas obligatorias
+    horasCtrl.setValidators([
+      Validators.required,
+      Validators.min(1),
+      Validators.max(24),
+    ]);
+
+    // Forzamos checkIn/checkOut a hoy (pero igual puedes ocultarlos en el HTML)
+    const hoyYmd = this.toYMD(new Date());
+    checkInCtrl.setValue(hoyYmd, { emitEvent: false });
+    checkOutCtrl.setValue(hoyYmd, { emitEvent: false });
+  } else {
+    horasCtrl.clearValidators();
+    horasCtrl.setValue(null, { emitEvent: false });
+
+    // Para reservas por noche dejamos que el usuario elija normalmente
+    // (no tocamos checkIn/checkOut aquí, se controlan con minIn/minOut)
+  }
+
+  horasCtrl.updateValueAndValidity({ emitEvent: false });
+  checkInCtrl.updateValueAndValidity({ emitEvent: false });
+  checkOutCtrl.updateValueAndValidity({ emitEvent: false });
+}
 
   private updateDocumentoValidators() {
     const persona = this.form.get('tipoPersona')!.value || 'NATURAL';
@@ -259,10 +308,10 @@ private prefillIfEditing() {
     telCtrl.updateValueAndValidity({ emitEvent: false });
   }
 
-private getPhoneRule(code?: string) {
-  const k = (code || '').trim();
-  return this.PHONE_RULES[k] || this.PHONE_RULES['default'];
-}
+  private getPhoneRule(code?: string) {
+    const k = (code || '').trim();
+    return this.PHONE_RULES[k] || this.PHONE_RULES['default'];
+  }
 
   // ============ Getters usados por el template ============
   get docMaxLength(): number {
@@ -446,16 +495,18 @@ private getPhoneRule(code?: string) {
   }
 
   // ============ fechas coherentes ============
-  private checkOutNotBeforeCheckIn = (
-    group: AbstractControl
-  ): ValidationErrors | null => {
-    const ci = group.get('checkIn')?.value;
-    const co = group.get('checkOut')?.value;
-    if (ci && co && co < ci) {
-      return { checkOutBeforeCheckIn: true };
-    }
-    return null;
-  };
+private checkOutNotBeforeCheckIn = (
+  group: AbstractControl
+): ValidationErrors | null => {
+  const ci = group.get('checkIn')?.value;
+  const co = group.get('checkOut')?.value;
+  const esPorHoras = !!group.get('reservaPorHoras')?.value;
+
+  if (!esPorHoras && ci && co && co < ci) {
+    return { checkOutBeforeCheckIn: true };
+  }
+  return null;
+};
 
   syncDates() {
     const ci = this.form.value.checkIn!;
@@ -472,19 +523,25 @@ private getPhoneRule(code?: string) {
       this.form.markAllAsTouched();
       return;
     }
+
     const v = this.form.value;
 
-    // tipoDocumento final
     const tipoFinal = v.tipoPersona === 'JURIDICA' ? 'RUC' : v.tipoDocumento;
 
-    // Teléfono -> E.164
     const code = String(v.phoneCountryCode || '+51')
       .replace(/[^+\d]/g, '')
       .replace(/^([^+])/, '+$1');
+
     const local = String(v.telefono || '').replace(/\D+/g, '');
     const telefonoE164 = `${code}${local}`;
 
-    const payload = {
+    const esPorHoras = !!v.reservaPorHoras;
+
+    // Para reservas por horas permitimos que checkOut sea igual a checkIn
+    const checkIn = v.checkIn!;
+    const checkOut = v.checkOut || v.checkIn!;
+
+    const payload: any = {
       // cliente
       tipoPersona: v.tipoPersona,
       tipoDocumento: tipoFinal,
@@ -499,27 +556,53 @@ private getPhoneRule(code?: string) {
 
       // reserva
       roomId: Number(v.roomId!),
-      checkIn: v.checkIn!,
-      checkOut: v.checkOut!,
+      checkIn,
+      checkOut,
       estado: 'RESERVADO',
+
+      // 🔹 info de reserva por horas
+      reservaPorHoras: esPorHoras,
+      horas: esPorHoras ? Number(v.horas) : null,
     };
 
     this.saving = true;
 
     this.reservationInfra
-      .createWithCustomer(payload as any)
+      .createWithCustomer(payload)
       .pipe(finalize(() => (this.saving = false)))
       .subscribe({
         next: (reserva) => {
-          // opcional: consulta de factura
           this.reservationInfra.getInvoiceByReservation(reserva.id).subscribe({
             next: () => this.closed.emit(true),
             error: () => this.closed.emit(true),
           });
         },
+
         error: (err) => {
-          const msg = err?.error?.message || 'No se pudo crear la reserva';
-          console.error(msg, err);
+          const backendMsg =
+            err?.error?.message ||
+            err?.error ||
+            'No se pudo crear la reserva';
+
+          console.error('Error en reserva:', backendMsg);
+
+          if (
+            backendMsg.includes('rango de fechas') ||
+            backendMsg.includes('disponible') ||
+            backendMsg.includes('solapad')
+          ) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Habitación no disponible',
+              text: backendMsg,
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: backendMsg,
+            });
+          }
         },
       });
   }
@@ -544,23 +627,25 @@ private getPhoneRule(code?: string) {
   }
 
   private loadPhoneCodes() {
-  this.loadingCodes = true;
-  this.reservationInfra.getPhoneCodes().subscribe({
-    next: (codes: PhoneCodeApi[]) => {
-      // Mapear a modelo de UI
-      this.phoneCodes = (codes || [])
-        .map(c => ({ code: c.dialCode, label: c.country, flag: c.flag }))
-        .sort((a, b) => a.label.localeCompare(b.label));
+    this.loadingCodes = true;
+    this.reservationInfra.getPhoneCodes().subscribe({
+      next: (codes: PhoneCodeApi[]) => {
+        // Mapear a modelo de UI
+        this.phoneCodes = (codes || [])
+          .map((c) => ({ code: c.dialCode, label: c.country, flag: c.flag }))
+          .sort((a, b) => a.label.localeCompare(b.label));
 
-      // Si el control no tiene valor, setear +51 por defecto si existe
-      const current = this.form.get('phoneCountryCode')!.value;
-      if (!current) {
-        const pe = this.phoneCodes.find(c => c.code === '+51');
-        this.form.get('phoneCountryCode')!.setValue(pe?.code || '+51', { emitEvent: false });
-      }
-    },
-    error: () => {},
-    complete: () => this.loadingCodes = false
-  });
-}
+        // Si el control no tiene valor, setear +51 por defecto si existe
+        const current = this.form.get('phoneCountryCode')!.value;
+        if (!current) {
+          const pe = this.phoneCodes.find((c) => c.code === '+51');
+          this.form
+            .get('phoneCountryCode')!
+            .setValue(pe?.code || '+51', { emitEvent: false });
+        }
+      },
+      error: () => {},
+      complete: () => (this.loadingCodes = false),
+    });
+  }
 }

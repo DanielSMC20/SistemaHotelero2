@@ -61,7 +61,7 @@ export class RoomListComponent implements OnInit {
       this.hotelService.getRooms().subscribe((rooms: Room[]) => {
       this.total = rooms.length;
       this.disponibles = rooms.filter(r => r.status === 'disponible').length;
-      this.ocupadas = rooms.filter(r => r.status === 'ocupado').length;
+      this.ocupadas = rooms.filter(r => r.status === 'ocupada').length;
       this.mantenimiento = rooms.filter(r => r.status === 'mantenimiento').length;
     });
   }
@@ -183,7 +183,7 @@ export class RoomListComponent implements OnInit {
 
   async markOccupied(r: Room) {
     const prev = r.status;
-    r.status = 'ocupado';
+    r.status = 'ocupada';
     this.updateStats();
 
     try {
@@ -235,7 +235,7 @@ export class RoomListComponent implements OnInit {
       (room) => room.status === 'disponible'
     ).length;
     this.occupiedRoomsCount = this.rooms.filter(
-      (room) => room.status === 'ocupado'
+      (room) => room.status === 'ocupada'
     ).length;
     this.maintenanceRoomsCount = this.rooms.filter(
       (room) => room.status === 'mantenimiento'
@@ -252,7 +252,7 @@ export class RoomListComponent implements OnInit {
     switch (status) {
       case 'disponible':
         return 'bg-green-100 text-green-800';
-      case 'ocupado':
+      case 'ocupada':
         return 'bg-red-100 text-red-800';
       case 'mantenimiento':
         return 'bg-yellow-100 text-yellow-800';
@@ -298,7 +298,7 @@ export class RoomListComponent implements OnInit {
     switch (status) {
       case 'disponible':
         return 'Disponible';
-      case 'ocupado':
+      case 'ocupada':
         return 'Ocupada';
       case 'mantenimiento':
         return 'En Mantenimiento';

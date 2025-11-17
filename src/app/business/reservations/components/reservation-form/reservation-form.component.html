@@ -43,72 +43,111 @@
           [formGroup]="form"
           (ngSubmit)="save()"
         >
-          <!-- Documento -->
-<!-- Documento + Tipo -->
-<div>
-  <label class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
+          <!-- Documento + Tipo -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Documento</label
+            >
 
-  <!-- Fila de tipo persona + tipo documento -->
-  <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-    <!-- Checkbox: Jurídica (RUC) -->
-    <label class="inline-flex items-center gap-2 rounded-lg ring-1 ring-gray-300 px-3 py-2 cursor-pointer">
-      <input type="checkbox"
-             [checked]="form.get('tipoPersona')?.value === 'JURIDICA'"
-             (change)="toggleJuridica($event)"
-      />
-      <span class="text-sm">Persona jurídica (RUC)</span>
-    </label>
+            <!-- Fila de tipo persona + tipo documento -->
+            <div
+              class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2"
+            >
+              <!-- Checkbox: Jurídica (RUC) -->
+              <label
+                class="inline-flex items-center gap-2 rounded-lg ring-1 ring-gray-300 px-3 py-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  [checked]="form.get('tipoPersona')?.value === 'JURIDICA'"
+                  (change)="toggleJuridica($event)"
+                />
+                <span class="text-sm">Persona jurídica (RUC)</span>
+              </label>
 
-    <!-- Select tipo documento (solo NATURAL) -->
-    <div class="sm:ml-auto w-full sm:w-64" *ngIf="form.get('tipoPersona')?.value === 'NATURAL'">
-      <select formControlName="tipoDocumento"
-              class="w-full rounded-xl border border-gray-300 px-3 py-2">
-        <option value="DNI">DNI</option>
-        <option value="CE">Carné de Extranjería</option>
-        <option value="PASAPORTE">Pasaporte</option>
-        <option value="OTRO">Otro</option>
-      </select>
-    </div>
+              <!-- Select tipo documento (solo NATURAL) -->
+              <div
+                class="sm:ml-auto w-full sm:w-64"
+                *ngIf="form.get('tipoPersona')?.value === 'NATURAL'"
+              >
+                <select
+                  formControlName="tipoDocumento"
+                  class="w-full rounded-xl border border-gray-300 px-3 py-2"
+                >
+                  <option value="DNI">DNI</option>
+                  <option value="CE">Carné de Extranjería</option>
+                  <option value="PASAPORTE">Pasaporte</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
 
-    <!-- Si es JURIDICA, bloqueamos a RUC (solo muestra) -->
-    <div class="sm:ml-auto w-full sm:w-64" *ngIf="form.get('tipoPersona')?.value === 'JURIDICA'">
-      <input type="text" value="RUC" disabled
-             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
-    </div>
-  </div>
+              <!-- Si es JURIDICA, bloqueamos a RUC (solo muestra) -->
+              <div
+                class="sm:ml-auto w-full sm:w-64"
+                *ngIf="form.get('tipoPersona')?.value === 'JURIDICA'"
+              >
+                <input
+                  type="text"
+                  value="RUC"
+                  disabled
+                  class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
+                />
+              </div>
+            </div>
 
-  <!-- Input del número de documento -->
-  <div class="flex gap-2">
-    <input
-      formControlName="documento"
-      type="text"
-      [attr.maxlength]="docMaxLength"
-(input)="onDocumentoInput($event)"
-      [attr.inputmode]="isNumericDoc ? 'numeric' : 'text'"
-      [attr.pattern]="isNumericDoc ? '[0-9]*' : '[A-Za-z0-9]+'"
-      class="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500"
-      [placeholder]="placeholderDoc"
-    />
-    <button
-      type="button"
-      (click)="lookupDoc()"
-      class="px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 inline-flex items-center gap-2"
-    >
-      <svg *ngIf="consulting" class="h-4 w-4 animate-spin text-gray-500" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-      </svg>
-      <span>Consultar</span>
-    </button>
-  </div>
+            <!-- Input del número de documento -->
+            <div class="flex gap-2">
+              <input
+                formControlName="documento"
+                type="text"
+                [attr.maxlength]="docMaxLength"
+                (input)="onDocumentoInput($event)"
+                [attr.inputmode]="isNumericDoc ? 'numeric' : 'text'"
+                [attr.pattern]="isNumericDoc ? '[0-9]*' : '[A-Za-z0-9]+'"
+                class="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500"
+                [placeholder]="placeholderDoc"
+              />
+              <button
+                type="button"
+                (click)="lookupDoc()"
+                class="px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 inline-flex items-center gap-2"
+              >
+                <svg
+                  *ngIf="consulting"
+                  class="h-4 w-4 animate-spin text-gray-500"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  />
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+                <span>Consultar</span>
+              </button>
+            </div>
 
-  <!-- Ayuda/errores -->
-  <div class="mt-1 text-xs"
-       [ngClass]="{ 'text-gray-500': form.get('documento')?.valid, 'text-red-600': form.get('documento')?.touched && form.get('documento')?.invalid }">
-    {{ helpDoc }}
-  </div>
-</div>
-
+            <!-- Ayuda/errores -->
+            <div
+              class="mt-1 text-xs"
+              [ngClass]="{
+                'text-gray-500': form.get('documento')?.valid,
+                'text-red-600':
+                  form.get('documento')?.touched &&
+                  form.get('documento')?.invalid
+              }"
+            >
+              {{ helpDoc }}
+            </div>
+          </div>
 
           <!-- Nombres -->
           <div>
@@ -137,31 +176,83 @@
           </div>
 
           <!-- Teléfono -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-          <div class="flex gap-2">
-            <select formControlName="phoneCountryCode"
-              class="rounded-xl border border-gray-300 px-3 py-2 w-40">
-        <option *ngIf="loadingCodes" disabled>Cargando…</option>
-        <ng-container *ngIf="!loadingCodes   fallbackCodes">
-          <option *ngFor="let c of phoneCodes" [value]="c.code">
-             {{ c.code }}
-          </option>
-        </ng-container>
-      </select>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Teléfono</label
+            >
+            <div class="flex gap-2">
+              <select
+                formControlName="phoneCountryCode"
+                class="rounded-xl border border-gray-300 px-3 py-2 w-40"
+              >
+                <option *ngIf="loadingCodes" disabled>Cargando…</option>
+                <option *ngFor="let c of phoneCodes" [value]="c.code">
+                  {{ c.code }}
+                </option>
+              </select>
 
-
-            <input formControlName="telefono"
-                  type="text"
-                  maxlength="15"
-                  (input)="digitsOnly('telefono', $event)"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  class="flex-1 rounded-xl border border-gray-300 px-4 py-2.5"
-                  placeholder="987654321" />
+              <input
+                formControlName="telefono"
+                type="text"
+                maxlength="15"
+                (input)="digitsOnly('telefono', $event)"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                class="flex-1 rounded-xl border border-gray-300 px-4 py-2.5"
+                placeholder="987654321"
+              />
+            </div>
+            <p class="mt-1 text-xs text-gray-500">
+              Se guardará como E.164. Ej.: +51 987654321 → +51987654321
+            </p>
           </div>
-          <p class="mt-1 text-xs text-gray-500">Se guardará como E.164. Ej.: +51 987654321 → +51987654321</p>
-        </div>
+
+          <!-- 🔹 Tipo de reserva: Noche / Horas -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de reserva
+            </label>
+            <div class="flex flex-wrap gap-4 items-center">
+              <label class="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  [value]="false"
+                  formControlName="reservaPorHoras"
+                />
+                <span class="text-sm">Por noche</span>
+              </label>
+
+              <label class="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  [value]="true"
+                  formControlName="reservaPorHoras"
+                />
+                <span class="text-sm">Por horas (cliente en el local)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ⏱ Cantidad de horas -->
+          <div
+            class="md:col-span-2"
+            *ngIf="form.get('reservaPorHoras')?.value"
+          >
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Cantidad de horas
+            </label>
+            <input
+              type="number"
+              formControlName="horas"
+              min="1"
+              max="24"
+              class="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500"
+              placeholder="Ej: 3"
+            />
+            <p class="mt-1 text-xs text-gray-500">
+              El cliente estará en la habitación esta cantidad de horas.
+            </p>
+          </div>
 
           <!-- Fechas -->
           <div>
@@ -185,6 +276,7 @@
               type="date"
               [attr.min]="minOut"
               class="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500"
+              [disabled]="form.get('reservaPorHoras')?.value"
             />
           </div>
 
@@ -202,39 +294,79 @@
                 Hab. {{ r.numero }} — {{ PEN.format(r.precioPorNoche || 0) }}
               </option>
             </select>
-
-            <!-- Estimado -->
-
           </div>
         </form>
       </div>
+
+      <!-- Resumen / Estimado -->
       <div
         *ngIf="selectedRoom as room"
         class="text-sm text-gray-700 mt-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3"
       >
-        <div class="flex flex-wrap items-center gap-3">
-          <span
-            class="inline-flex items-center gap-2 rounded-lg bg-indigo-50 text-indigo-700 px-3 py-1.5"
-          >
-            <span class="font-semibold">{{ nights }}</span> noches
-          </span>
-          <span
-            class="inline-flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 px-3 py-1.5"
-          >
-            Habitación <span class="font-semibold">{{ room.numero }}</span>
-          </span>
-          <span
-            class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 text-emerald-700 px-3 py-1.5"
-          >
-            Estimado total
-            <span class="font-semibold">{{ PEN.format(estimate) }}</span>
-          </span>
-        </div>
+        <!-- Modo NOCHES -->
+        <ng-container *ngIf="!form.value.reservaPorHoras; else resumenHoras">
+          <div class="flex flex-wrap items-center gap-3">
+            <span
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-50 text-indigo-700 px-3 py-1.5"
+            >
+              <span class="font-semibold">{{ nights }}</span> noches
+            </span>
+            <span
+              class="inline-flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 px-3 py-1.5"
+            >
+              Habitación
+              <span class="font-semibold">{{ room.numero }}</span>
+            </span>
+            <span
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 text-emerald-700 px-3 py-1.5"
+            >
+              Estimado total
+              <span class="font-semibold"
+                >{{ PEN.format(estimate) }}</span
+              >
+            </span>
+          </div>
 
-        <p class="text-xs text-gray-500 mt-4">
-          Al guardar, el sistema recalcula el total con tarifas y reglas
-          vigentes.
-        </p>
+          <p class="text-xs text-gray-500 mt-4">
+            Al guardar, el sistema recalcula el total con tarifas y reglas
+            vigentes.
+          </p>
+        </ng-container>
+
+        <!-- Modo HORAS -->
+        <ng-template #resumenHoras>
+          <div class="flex flex-wrap items-center gap-3">
+            <span
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-50 text-indigo-700 px-3 py-1.5"
+            >
+              <span class="font-semibold">{{ form.value.horas || 0 }}</span>
+              horas
+            </span>
+            <span
+              class="inline-flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 px-3 py-1.5"
+            >
+              Habitación
+              <span class="font-semibold">{{ room.numero }}</span>
+            </span>
+            <span
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-50 text-emerald-700 px-3 py-1.5"
+            >
+              Estimado total
+              <span class="font-semibold">
+                {{
+                  PEN.format(
+                    (form.value.horas || 0) * (room.precioPorHora || 0)
+                  )
+                }}
+              </span>
+            </span>
+          </div>
+
+          <p class="text-xs text-gray-500 mt-4">
+            Esta reserva se creará por horas. El backend calculará y marcará la
+            habitación como ocupada.
+          </p>
+        </ng-template>
       </div>
 
       <!-- Footer -->

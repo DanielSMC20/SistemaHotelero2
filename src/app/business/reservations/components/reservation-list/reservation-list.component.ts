@@ -335,7 +335,11 @@ export class ReservationListComponent implements OnInit {
 private loadReservations() {
   this.reservationInfra.getAllReservations().subscribe({
     next: (data) => {
-      this.rowData = data;     // ✅ suficiente
+      // 🔥 Filtrar: excluir CHECKED_OUT
+      this.rowData = data.filter(r =>
+        String(r.estado).toUpperCase() !== 'CHECKED_OUT'
+      );
+
     },
     error: (err) => console.error('Error al cargar reservas:', err),
   });
