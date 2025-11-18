@@ -2,7 +2,7 @@
   <div class="flex items-center justify-center p-6 sm:p-10">
     <div class="w-full max-w-md">
       <div class="mb-8">
-        <h1 class="text-2xl font-bold tracking-tight">Sign in to your account</h1>
+        <h1 class="text-2xl font-bold tracking-tight">Iniciar sesión</h1>
       </div>
 
       <form class="mt-8 space-y-5" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
@@ -101,19 +101,10 @@
           <span>{{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}</span>
         </button>
 
-        <div class="relative flex justify-center text-sm my-6">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-slate-700"></div>
-          </div>
-          <span class="relative bg-slate-950 px-3 text-slate-400">Para desarrollo</span>
-        </div>
+
 
         <div class="text-center">
-          <button type="button" class="w-full py-2.5 px-4 border border-slate-700 rounded-xl text-sm font-medium
-                   text-slate-300 hover:bg-slate-800/50 focus:outline-none focus:ring-2
-                   focus:ring-indigo-500/40 transition-colors">
-            👤 Mostrar usuarios de prueba
-          </button>
+          
         </div>
       </form>
     </div>

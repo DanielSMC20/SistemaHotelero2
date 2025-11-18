@@ -36,6 +36,7 @@ export class RoomListComponent implements OnInit {
   opening: boolean | undefined;
   saving: any;
   actionLoading: any;
+  
   setView(v: RoomView) {
     this.view = v;
   }
@@ -52,24 +53,20 @@ export class RoomListComponent implements OnInit {
   ocupadas = 0;
   mantenimiento = 0;
   porcentajeOcupacion = 0;
+  
   constructor(private fb: FormBuilder, private hotelService: HotelService) {}
 
   ngOnInit(): void {
     this.loadRooms();
     this.view = 'table';
     this.buildCreateForm();
-      this.hotelService.getRooms().subscribe((rooms: Room[]) => {
-      this.total = rooms.length;
-      this.disponibles = rooms.filter(r => r.status === 'disponible').length;
-      this.ocupadas = rooms.filter(r => r.status === 'ocupado').length;
-      this.mantenimiento = rooms.filter(r => r.status === 'mantenimiento').length;
-    });
   }
 
   openCreateModal() {
     this.showCreate = true;
     document.body.style.overflow = 'hidden';
   }
+  
   closeCreateModal() {
     this.showCreate = false;
     document.body.style.overflow = '';
@@ -85,6 +82,7 @@ export class RoomListComponent implements OnInit {
       detalles: '',
     });
   }
+  
   private buildCreateForm() {
     this.createForm = this.fb.group({
       numero: ['', [Validators.required, Validators.maxLength(10)]],
@@ -106,6 +104,7 @@ export class RoomListComponent implements OnInit {
       next: (rooms) => {
         this.rooms = rooms;
         this.updateStats();
+        this.updateCounters();
         this.loading = false;
       },
       error: (err) => {
@@ -114,19 +113,14 @@ export class RoomListComponent implements OnInit {
       },
     });
   }
+  
   async saveRoom() {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       return;
     }
 
-    const payload = this.createForm.value; // ya coincide con el JSON esperado
-    // Ejemplo:
-    // {
-    //   "numero":"205", "tipo":"SUITE", "estado":"DISPONIBLE",
-    //   "capacidad":2, "camas":1, "rango":"Premium",
-    //   "precioPorNoche":320.0, "precioPorHora":60.0, "detalles":"..."
-    // }
+    const payload = this.createForm.value;
 
     this.saving = true;
     try {
@@ -135,6 +129,7 @@ export class RoomListComponent implements OnInit {
       );
       this.rooms = [created, ...this.rooms];
       this.updateStats();
+      this.updateCounters();
       this.closeCreateModal();
     } catch (e) {
       console.error(e);
@@ -146,7 +141,6 @@ export class RoomListComponent implements OnInit {
   openRoom(r: Room) {
     this.selected = r;
     this.opening = true;
-    // opcional: bloquear scroll de fondo
     document.body.style.overflow = 'hidden';
     setTimeout(() => (this.opening = false), 150);
   }
@@ -160,6 +154,7 @@ export class RoomListComponent implements OnInit {
     const prev = r.status;
     r.status = 'disponible';
     this.updateStats();
+    this.updateCounters(); // ✅ Actualiza contadores inmediatamente
 
     try {
       await firstValueFrom(this.hotelService.setAvailable(r.id));
@@ -173,6 +168,7 @@ export class RoomListComponent implements OnInit {
     } catch (err) {
       r.status = prev;
       this.updateStats();
+      this.updateCounters(); // ✅ Revierte los contadores en caso de error
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -183,8 +179,9 @@ export class RoomListComponent implements OnInit {
 
   async markOccupied(r: Room) {
     const prev = r.status;
-    r.status = 'ocupado';
+    r.status = 'ocupada';
     this.updateStats();
+    this.updateCounters(); // ✅ Actualiza contadores inmediatamente
 
     try {
       await firstValueFrom(this.hotelService.setOccupied(r.id));
@@ -198,6 +195,7 @@ export class RoomListComponent implements OnInit {
     } catch (err) {
       r.status = prev;
       this.updateStats();
+      this.updateCounters(); // ✅ Revierte los contadores en caso de error
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -205,10 +203,12 @@ export class RoomListComponent implements OnInit {
       });
     }
   }
+  
   async markMaintenance(r: Room) {
     const prev = r.status;
     r.status = 'mantenimiento';
     this.updateStats();
+    this.updateCounters(); // ✅ Actualiza contadores inmediatamente
 
     try {
       await firstValueFrom(this.hotelService.setMaintenance(r.id));
@@ -222,6 +222,7 @@ export class RoomListComponent implements OnInit {
     } catch (err) {
       r.status = prev;
       this.updateStats();
+      this.updateCounters(); // ✅ Revierte los contadores en caso de error
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -230,12 +231,20 @@ export class RoomListComponent implements OnInit {
     }
   }
 
+  // ✅ Nuevo método para actualizar los contadores de las tarjetas
+  private updateCounters(): void {
+    this.total = this.rooms.length;
+    this.disponibles = this.rooms.filter(r => r.status === 'disponible').length;
+    this.ocupadas = this.rooms.filter(r => r.status === 'ocupada').length;
+    this.mantenimiento = this.rooms.filter(r => r.status === 'mantenimiento').length;
+  }
+
   private updateStats(): void {
     this.availableRoomsCount = this.rooms.filter(
       (room) => room.status === 'disponible'
     ).length;
     this.occupiedRoomsCount = this.rooms.filter(
-      (room) => room.status === 'ocupado'
+      (room) => room.status === 'ocupada'
     ).length;
     this.maintenanceRoomsCount = this.rooms.filter(
       (room) => room.status === 'mantenimiento'
@@ -252,7 +261,7 @@ export class RoomListComponent implements OnInit {
     switch (status) {
       case 'disponible':
         return 'bg-green-100 text-green-800';
-      case 'ocupado':
+      case 'ocupada':
         return 'bg-red-100 text-red-800';
       case 'mantenimiento':
         return 'bg-yellow-100 text-yellow-800';
@@ -278,7 +287,6 @@ export class RoomListComponent implements OnInit {
     }
   }
 
-  // ✅ Traducciones para mostrar en español
   translateType(type: string): string {
     switch (type) {
       case 'standard':
@@ -298,7 +306,7 @@ export class RoomListComponent implements OnInit {
     switch (status) {
       case 'disponible':
         return 'Disponible';
-      case 'ocupado':
+      case 'ocupada':
         return 'Ocupada';
       case 'mantenimiento':
         return 'En Mantenimiento';
@@ -313,6 +321,7 @@ export class RoomListComponent implements OnInit {
     if (confirm('¿Estás seguro de eliminar esta habitación?')) {
       this.rooms = this.rooms.filter((room) => room.id !== id);
       this.updateStats();
+      this.updateCounters();
     }
   }
 
