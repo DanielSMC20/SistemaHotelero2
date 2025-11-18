@@ -60,6 +60,12 @@ export class RoomListComponent implements OnInit {
     this.loadRooms();
     this.view = 'table';
     this.buildCreateForm();
+      this.hotelService.getRooms().subscribe((rooms: Room[]) => {
+      this.total = rooms.length;
+      this.disponibles = rooms.filter(r => r.status === 'disponible').length;
+      this.ocupadas = rooms.filter(r => r.status === 'ocupada').length;
+      this.mantenimiento = rooms.filter(r => r.status === 'mantenimiento').length;
+    });
   }
 
   openCreateModal() {

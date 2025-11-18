@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
-export type Rol = 'ADMIN' | 'RECEPCIONISTA' | 'GERENTE';
+export type Rol = 'ADMIN' | 'RECEPCIONISTA' | 'GERENCIA';
 
 @Directive({
   selector: '[appHasRol]',

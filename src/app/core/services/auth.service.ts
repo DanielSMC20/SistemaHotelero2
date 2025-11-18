@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, of, tap, catchError } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { env } from '../environments/environment';
 
-export type Rol = 'ADMIN' | 'RECEPCIONISTA' | 'GERENTE';
+export type Rol = 'ADMIN' | 'RECEPCIONISTA' | 'GERENCIA';
 
 export interface UsuarioSesion {
   id?: number;
@@ -39,7 +39,7 @@ export class AuthService {
     const v = String(roleStr ?? '').toUpperCase().trim().replace(/^ROLE_/, '');
     if (v === 'ADMIN') return 'ADMIN';
     if (v === 'RECEPCION' || v === 'RECEPCIONISTA') return 'RECEPCIONISTA';
-    if (v === 'GERENTE' || v === 'GERENCIA') return 'GERENTE';
+    if (v === 'GERENCIA' || v === 'GERENCIA') return 'GERENCIA';
     // por defecto si llega algo raro
     return 'RECEPCIONISTA';
   }
