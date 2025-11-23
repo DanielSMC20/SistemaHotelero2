@@ -130,36 +130,76 @@ export class CheckCenterComponent implements OnInit, OnChanges {
     this.mostrarModalPago = false;
   }
 
-  procesarPago(event: { monto: number; metodo: string }) {
-    if (!this.facturaSeleccionada) return;
+procesarPago(event: { monto: number; metodo: string }) {
+  if (!this.facturaSeleccionada) return;
 
-    this.api.recordPayment({
-      reservationId: this.facturaSeleccionada.reservationId,
-      amount: event.monto,
-      method: (event.metodo ?? '').toString().toUpperCase(),
-    }).subscribe({
-      next: () => {
-        // Después de registrar el pago, hacemos el check-out
-        this.onCheckOutAfterPayment(this.facturaSeleccionada.reservationId);
-        this.cerrarModalPago();
-        Swal.fire({
-          icon: 'success',
-          title: 'Pago completado con éxito',
-          text: 'El check-out se ha registrado correctamente.',
-          confirmButtonColor: '#2563eb'
+  // Abrimos la ventana antes para evitar bloqueos de popups
+  const newWindow = window.open('', '_blank');
+
+  this.api.recordPayment({
+    reservationId: this.facturaSeleccionada.reservationId,
+    amount: event.monto,
+    method: (event.metodo ?? '').toString().toUpperCase(),
+  }).subscribe({
+    next: (res: any) => {
+      console.log('Respuesta de recordPayment:', res);
+
+      // 🔴 IMPORTANTE: el id viene en res.data.id, no en res.id
+      const paymentId = res?.data?.id;
+      console.log('paymentId =', paymentId);
+
+      // 1) Descargar/abrir la boleta en PDF
+      if (paymentId) {
+        this.reser.downloadPaymentReceipt(paymentId).subscribe({
+          next: (blob) => {
+            console.log('Blob PDF recibido:', blob);
+            const url = URL.createObjectURL(blob);
+
+            if (newWindow) {
+              newWindow.location.href = url; // carga el PDF en la nueva pestaña
+            } else {
+              window.open(url, '_blank');
+            }
+          },
+          error: (err) => {
+            console.error('Error al descargar el comprobante PDF', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error al descargar la boleta',
+              text: 'El pago se registró, pero no se pudo abrir el comprobante.',
+              confirmButtonColor: '#dc2626',
+            });
+          },
         });
-      },
-      error: (err: any) => {
-        console.error('Error al registrar el pago', err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al registrar el pago',
-          text: 'Verifica la conexión o el servidor.',
-          confirmButtonColor: '#dc2626'
-        });
-      },
-    });
-  }
+      } else {
+        console.warn('No vino id de pago en res.data.id, no se puede descargar boleta');
+      }
+
+      // 2) Después de registrar el pago, hacemos el check-out
+      this.onCheckOutAfterPayment(this.facturaSeleccionada.reservationId);
+
+      // 3) Cerramos el modal y mostramos éxito
+      this.cerrarModalPago();
+      Swal.fire({
+        icon: 'success',
+        title: 'Pago completado con éxito',
+        text: 'El check-out se ha registrado correctamente.',
+        confirmButtonColor: '#2563eb',
+      });
+    },
+    error: (err: any) => {
+      console.error('Error al registrar el pago', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al registrar el pago',
+        text: 'Verifica la conexión o el servidor.',
+        confirmButtonColor: '#dc2626',
+      });
+    },
+  });
+}
+
+
 
   // ===== Acciones contra API =====
   onDoCheckIn(r: Reserva) {

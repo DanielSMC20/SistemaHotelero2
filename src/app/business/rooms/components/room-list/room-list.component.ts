@@ -27,6 +27,8 @@ export class RoomListComponent implements OnInit {
   view: RoomView = 'table';
   showCreate = false;
   createForm!: FormGroup;
+  editingRoom: Room | null = null;
+
 
   availableRoomsCount = 0;
   occupiedRoomsCount = 0;
@@ -54,6 +56,10 @@ export class RoomListComponent implements OnInit {
   porcentajeOcupacion = 0;
   constructor(private fb: FormBuilder, private hotelService: HotelService) {}
 
+  get isEditMode(): boolean {
+    return !!this.editingRoom;
+  }
+
   ngOnInit(): void {
     this.loadRooms();
     this.view = 'table';
@@ -67,11 +73,13 @@ export class RoomListComponent implements OnInit {
   }
 
   openCreateModal() {
+    this.editingRoom = null;
     this.showCreate = true;
     document.body.style.overflow = 'hidden';
   }
   closeCreateModal() {
     this.showCreate = false;
+    this.editingRoom = null;
     document.body.style.overflow = '';
     this.createForm.reset({
       numero: '',
@@ -99,6 +107,25 @@ export class RoomListComponent implements OnInit {
     });
   }
 
+  openEditModal(room: Room) {
+    this.editingRoom = room;
+    this.showCreate = true;
+    document.body.style.overflow = 'hidden';
+
+    // Mapea Room → formulario (ajusta nombres si tu modelo difiere)
+    this.createForm.reset({
+      numero: room.number ?? '',             // o room.numero si tu modelo así lo maneja
+      tipo: (room.type ?? '').toUpperCase(), // SIMPLE, DOBLE, etc.
+      estado: (room.status ?? 'DISPONIBLE').toUpperCase(),
+      capacidad: room.maxGuests ?? 1,
+      camas: (room as any).camas ?? 1,
+      rango: (room as any).rango ?? '',
+      precioPorNoche: (room as any).precioPorNoche ?? room.price ?? 0,
+      precioPorHora: (room as any).precioPorHora ?? 0,
+      detalles: room.details ?? '',
+    });
+  }
+
   loadRooms(): void {
     this.loading = true;
     this.error = null;
@@ -120,24 +147,54 @@ export class RoomListComponent implements OnInit {
       return;
     }
 
-    const payload = this.createForm.value; // ya coincide con el JSON esperado
-    // Ejemplo:
-    // {
-    //   "numero":"205", "tipo":"SUITE", "estado":"DISPONIBLE",
-    //   "capacidad":2, "camas":1, "rango":"Premium",
-    //   "precioPorNoche":320.0, "precioPorHora":60.0, "detalles":"..."
-    // }
-
+    const payload = this.createForm.value;
     this.saving = true;
+
     try {
-      const created = await firstValueFrom(
-        this.hotelService.createRoom(payload)
-      );
-      this.rooms = [created, ...this.rooms];
-      this.updateStats();
+      if (this.isEditMode && this.editingRoom) {
+        // ⭐ EDITAR
+        const updated = await firstValueFrom(
+          this.hotelService.updateRoom(this.editingRoom.id, payload)
+        );
+
+        const idx = this.rooms.findIndex(r => r.id === updated.id);
+        if (idx !== -1) {
+          this.rooms[idx] = { ...this.rooms[idx], ...updated };
+        }
+        this.updateStats();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Habitación actualizada',
+          text: `La habitación ${updated.number ?? updated.id} se actualizó correctamente.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        // ⭐ CREAR
+        const created = await firstValueFrom(
+          this.hotelService.createRoom(payload)
+        );
+        this.rooms = [created, ...this.rooms];
+        this.updateStats();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Habitación creada',
+          text: `La habitación ${created.number ?? created.id} fue creada correctamente.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
+
       this.closeCreateModal();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: e?.error?.message || 'No se pudo guardar la habitación.',
+      });
     } finally {
       this.saving = false;
     }
@@ -156,79 +213,90 @@ export class RoomListComponent implements OnInit {
     document.body.style.overflow = '';
   }
 
-  async markAvailable(r: Room) {
-    const prev = r.status;
-    r.status = 'disponible';
+async markAvailable(r: Room) {
+  const prev = r.status;
+  r.status = 'disponible';
+  this.updateStats();
+
+  try {
+    const updated = await firstValueFrom(this.hotelService.setAvailable(r.id));
+    // Actualizamos con lo que venga del backend (por si cambia algo más)
+    Object.assign(r, updated);
     this.updateStats();
 
-    try {
-      await firstValueFrom(this.hotelService.setAvailable(r.id));
-      Swal.fire({
-        icon: 'success',
-        title: '¡Actualizado!',
-        text: `La habitación ${r.number} fue marcada como disponible.`,
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } catch (err) {
-      r.status = prev;
-      this.updateStats();
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo marcar como disponible.',
-      });
-    }
+    Swal.fire({
+      icon: 'success',
+      title: '¡Actualizado!',
+      text: `La habitación ${r.number} fue marcada como disponible.`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    r.status = prev;
+    this.updateStats();
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo marcar como disponible.',
+    });
   }
+}
 
-  async markOccupied(r: Room) {
-    const prev = r.status;
-    r.status = 'ocupada';
+async markOccupied(r: Room) {
+  const prev = r.status;
+  r.status = 'ocupada';
+  this.updateStats();
+
+  try {
+    const updated = await firstValueFrom(this.hotelService.setOccupied(r.id));
+    Object.assign(r, updated);
     this.updateStats();
 
-    try {
-      await firstValueFrom(this.hotelService.setOccupied(r.id));
-      Swal.fire({
-        icon: 'success',
-        title: '¡Actualizado!',
-        text: `La habitación ${r.number} fue marcada como ocupada.`,
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } catch (err) {
-      r.status = prev;
-      this.updateStats();
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo marcar como ocupada.',
-      });
-    }
+    Swal.fire({
+      icon: 'success',
+      title: '¡Actualizado!',
+      text: `La habitación ${r.number} fue marcada como ocupada.`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    r.status = prev;
+    this.updateStats();
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo marcar como ocupada.',
+    });
   }
-  async markMaintenance(r: Room) {
-    const prev = r.status;
-    r.status = 'mantenimiento';
+}
+
+async markMaintenance(r: Room) {
+  const prev = r.status;
+  r.status = 'mantenimiento';
+  this.updateStats();
+
+  try {
+    const updated = await firstValueFrom(this.hotelService.setMaintenance(r.id));
+    Object.assign(r, updated);
     this.updateStats();
 
-    try {
-      await firstValueFrom(this.hotelService.setMaintenance(r.id));
-      Swal.fire({
-        icon: 'warning',
-        title: '¡Actualizado!',
-        text: `La habitación ${r.number} está en mantenimiento.`,
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } catch (err) {
-      r.status = prev;
-      this.updateStats();
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo marcar en mantenimiento.',
-      });
-    }
+    Swal.fire({
+      icon: 'warning',
+      title: '¡Actualizado!',
+      text: `La habitación ${r.number} está en mantenimiento.`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    r.status = prev;
+    this.updateStats();
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo marcar en mantenimiento.',
+    });
   }
+}
 
   private updateStats(): void {
     this.availableRoomsCount = this.rooms.filter(
@@ -339,4 +407,6 @@ export class RoomListComponent implements OnInit {
   refresh() {
     this.loadRooms();
   }
+
+  
 }

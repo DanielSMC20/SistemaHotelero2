@@ -20,6 +20,7 @@ export class ReservationInfraestructure {
   private readonly RES_URL = `${this.API}/reservations`;
   private readonly ROOMS_URL = `${this.API}/rooms`;
   private readonly INV_URL = `${this.API}/invoices`;
+  private readonly PAY_URL = `${this.API}/payments`; 
 
   // Si usas interceptor JWT, puedes borrar getAuthHeaders y quitar {headers}
   constructor(private http: HttpClient) {}
@@ -33,6 +34,8 @@ export class ReservationInfraestructure {
     });
   }
 
+
+  
   // yyyy-MM-dd -> Date (00:00)
   private parseApiDate(v: any): Date | undefined {
     if (!v) return undefined;
@@ -131,6 +134,11 @@ export class ReservationInfraestructure {
       .put<any>(`${this.RES_URL}/${id}`, this.toApi(body), { headers })
       .pipe(map(this.fromApi));
   }
+
+  updateRoom(id: number, body: Partial<Habitacion>): Observable<Habitacion> {
+  const headers = this.getAuthHeaders();
+  return this.http.put<Habitacion>(`${this.ROOMS_URL}/${id}`, body, { headers });
+}
 
   deleteReservation(id: number): Observable<void> {
     const headers = this.getAuthHeaders();
@@ -247,9 +255,17 @@ export class ReservationInfraestructure {
     );
   }
 
+  
+
+downloadPaymentReceipt(paymentId: number): Observable<Blob> {
+  const headers = this.getAuthHeaders();
+  return this.http.get(`${this.PAY_URL}/${paymentId}/comprobante`, {
+    headers,
+    responseType: 'blob',
+  });
+}
 getPhoneCodes() {
   const headers = this.getAuthHeaders();
   return this.http.get<PhoneCodeApi[]>(`${this.API}/phone-codes`, { headers });
 }
-
 }

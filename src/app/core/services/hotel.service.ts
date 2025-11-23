@@ -71,6 +71,10 @@ export class HotelService {
   deleteRoom(id: number) {
     return this.http.delete<void>(`${this.ROOMS_URL}/${id}`, { headers: this.auth() });
   }
+updateRoom(id: number, payload: any): Observable<Room> {
+    return this.http.put<Room>(`${this.ROOMS_URL}/${id}`, payload, {
+      headers: this.auth(),
+    });
+  }
 
-  
 }

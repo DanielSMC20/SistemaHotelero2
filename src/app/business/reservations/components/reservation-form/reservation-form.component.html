@@ -187,7 +187,7 @@
               >
                 <option *ngIf="loadingCodes" disabled>Cargando…</option>
                 <option *ngFor="let c of phoneCodes" [value]="c.code">
-                  {{ c.code }}
+                  {{ c.code }}, {{ c.label }}
                 </option>
               </select>
 

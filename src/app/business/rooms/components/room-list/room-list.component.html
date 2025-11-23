@@ -67,91 +67,125 @@
   </div>
 
   <!-- 🪟 Panel lateral -->
-  <div *ngIf="selected" class="fixed inset-0 bg-black/40 flex justify-end z-50" (click)="closeRoom()">
-    <div class="bg-white w-full sm:w-[420px] h-full shadow-xl rounded-l-xl overflow-y-auto"
-         (click)="$event.stopPropagation()">
-      <div class="p-5 border-b flex justify-between items-center">
-        <div>
-          <h3 class="text-xl font-semibold text-gray-900">Habitación #{{ selected.number }}</h3>
-          <p class="text-sm text-gray-500">{{ translateType(selected.type) }}</p>
-        </div>
-        <button (click)="closeRoom()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+<div *ngIf="selected" class="fixed inset-0 bg-black/40 flex justify-end z-50" (click)="closeRoom()">
+  <div class="bg-white w-full sm:w-[420px] h-full shadow-xl rounded-l-xl overflow-y-auto"
+       (click)="$event.stopPropagation()">
+
+    <div class="p-5 border-b flex justify-between items-center">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900">
+          Habitación #{{ selected.number }}
+        </h3>
+        <p class="text-sm text-gray-500">{{ translateType(selected.type) }}</p>
+      </div>
+      <button (click)="closeRoom()" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <div class="flex justify-between">
+        <span class="text-sm text-gray-600">Estado:</span>
+        <span class="px-2 py-1 text-xs rounded-full font-semibold" [ngClass]="getStatusColor(selected.status)">
+          {{ translateStatus(selected.status) }}
+        </span>
       </div>
 
-      <div class="p-5 space-y-4">
-        <div class="flex justify-between">
-          <span class="text-sm text-gray-600">Estado:</span>
-          <span class="px-2 py-1 text-xs rounded-full font-semibold" [ngClass]="getStatusColor(selected.status)">
-            {{ translateStatus(selected.status) }}
-          </span>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div><span class="text-gray-500">Precio:</span> <b>S/ {{ selected.price }}</b></div>
+        <div><span class="text-gray-500">Capacidad:</span> <b>{{ selected.maxGuests }}</b></div>
+        <div><span class="text-gray-500">Piso:</span> <b>{{ selected.floor }}</b></div>
+        <div><span class="text-gray-500">Amenidades:</span> <b>{{ selected.amenities }}</b></div>
+      </div>
+
+      <!-- Acciones rápidas estado -->
+      <div class="pt-4 border-t">
+        <p class="text-gray-600 text-sm font-medium mb-2">Acciones rápidas</p>
+
+        <div class="flex flex-wrap gap-2">
+          <button 
+            (click)="markAvailable(selected!)"
+            [disabled]="actionLoading || !selected"
+            class="px-3 py-1.5 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition">
+            <i class="fa-solid fa-check mr-1"></i> Marcar Disponible
+          </button>
+
+          <button 
+            (click)="markOccupied(selected!)"
+            [disabled]="actionLoading || !selected"
+            class="px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60 transition">
+            <i class="fa-solid fa-bed mr-1"></i> Marcar Ocupada
+          </button>
+
+          <button 
+            (click)="markMaintenance(selected!)"
+            [disabled]="actionLoading || !selected"
+            class="px-3 py-1.5 text-xs font-semibold bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-60 transition">
+            <i class="fa-solid fa-wrench mr-1"></i> En Mantenimiento
+          </button>
         </div>
+      </div>
 
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div><span class="text-gray-500">Precio:</span> <b>S/ {{ selected.price }}</b></div>
-          <div><span class="text-gray-500">Capacidad:</span> <b>{{ selected.maxGuests }}</b></div>
-          <div><span class="text-gray-500">Piso:</span> <b>{{ selected.floor }}</b></div>
-          <div><span class="text-gray-500">Amenidades:</span> <b>{{ selected.amenities}}</b></div>
-        </div>
+      <!-- ⭐ NUEVO: botón vistoso para editar TODOS los datos -->
+      <div class="pt-4 border-t">
+        <p class="text-gray-600 text-sm font-medium mb-2">Gestión avanzada</p>
 
-<div class="pt-4 border-t">
-  <p class="text-gray-600 text-sm font-medium mb-2">Acciones rápidas</p>
-
-  <div class="flex flex-wrap gap-2">
-    <!-- Disponible -->
-    <button 
-      (click)="markAvailable(selected!)"
-      [disabled]="actionLoading || !selected"
-      class="px-3 py-1.5 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition">
-      <i class="fa-solid fa-check mr-1"></i> Marcar Disponible
-    </button>
-
-    <!-- Ocupada -->
-    <button 
-      (click)="markOccupied(selected!)"
-      [disabled]="actionLoading || !selected"
-      class="px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60 transition">
-      <i class="fa-solid fa-bed mr-1"></i> Marcar Ocupada
-    </button>
-
-    <!-- Mantenimiento -->
-    <button 
-      (click)="markMaintenance(selected!)"
-      [disabled]="actionLoading || !selected"
-      class="px-3 py-1.5 text-xs font-semibold bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-60 transition">
-      <i class="fa-solid fa-wrench mr-1"></i> En Mantenimiento
-    </button>
-  </div>
-</div>
+        <button
+          type="button"
+          (click)="openEditModal(selected!); closeRoom()"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold
+                 shadow-md hover:shadow-lg hover:from-blue-700 hover:to-indigo-700
+                 transform hover:-translate-y-0.5 transition">
+          <i class="fa-solid fa-pen-to-square text-sm"></i>
+          <span>Editar datos completos</span>
+        </button>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- ✅ Modal Crear Habitación -->
+<!-- 🧩 Modal Crear / Editar Habitación -->
 <div *ngIf="showCreate" class="fixed inset-0 z-50 flex items-center justify-center">
   <!-- Backdrop -->
-  <div class="absolute inset-0 bg-black/40" (click)="closeCreateModal()"></div>
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeCreateModal()"></div>
 
   <!-- Dialog -->
-  <div class="relative bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden">
-    <div class="px-6 py-4 border-b flex items-center justify-between">
-      <h3 class="text-lg font-bold text-gray-900">Crear nueva habitación</h3>
-      <button (click)="closeCreateModal()" class="p-2 rounded-lg hover:bg-gray-100">✕</button>
+  <div class="relative bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600">
+      <div>
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen-to-square' : 'fa-plus-circle'"></i>
+          {{ isEditMode ? 'Editar habitación' : 'Crear nueva habitación' }}
+        </h3>
+        <p class="text-xs text-blue-100" *ngIf="isEditMode">
+          ID #{{ editingRoom?.id }} · Estado actual: {{ translateStatus(editingRoom?.status || '') }}
+        </p>
+      </div>
+      <button (click)="closeCreateModal()" class="p-2 rounded-lg hover:bg-white/10 text-white text-lg">
+        ✕
+      </button>
     </div>
 
+    <!-- Form -->
     <form class="p-6 space-y-4" (ngSubmit)="saveRoom()" [formGroup]="createForm">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
+        <!-- Número -->
+        <div class="md:col-span-1">
           <label class="block text-sm font-medium text-gray-700">Número</label>
-          <input type="text" formControlName="numero" class="mt-1 w-full rounded-lg border px-3 py-2"
+          <input type="text" formControlName="numero"
+                 class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                  placeholder="205" />
           <p *ngIf="createForm.get('numero')?.touched && createForm.get('numero')?.invalid"
              class="text-xs text-rose-600 mt-1">Ingresa el número de la habitación.</p>
         </div>
 
+        <!-- Tipo -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Tipo</label>
-          <select formControlName="tipo" class="mt-1 w-full rounded-lg border px-3 py-2">
+          <select formControlName="tipo"
+                  class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="" disabled>— Selecciona —</option>
             <option value="SIMPLE">SIMPLE</option>
             <option value="DOBLE">DOBLE</option>
@@ -162,69 +196,98 @@
              class="text-xs text-rose-600 mt-1">Selecciona el tipo.</p>
         </div>
 
+        <!-- Estado -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Estado</label>
-          <select formControlName="estado" class="mt-1 w-full rounded-lg border px-3 py-2">
+          <select formControlName="estado"
+                  class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="DISPONIBLE">DISPONIBLE</option>
             <option value="OCUPADA">OCUPADA</option>
             <option value="MANTENIMIENTO">MANTENIMIENTO</option>
           </select>
         </div>
 
+        <!-- Capacidad -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Capacidad</label>
-          <input type="number" formControlName="capacidad" class="mt-1 w-full rounded-lg border px-3 py-2"
+          <input type="number" formControlName="capacidad"
+                 class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                  min="1" placeholder="2" />
         </div>
 
+        <!-- Camas -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Camas</label>
-          <input type="number" formControlName="camas" class="mt-1 w-full rounded-lg border px-3 py-2"
+          <input type="number" formControlName="camas"
+                 class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                  min="1" placeholder="1" />
         </div>
 
+        <!-- Rango -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Rango</label>
-          <select formControlName="rango" class="mt-1 w-full rounded-lg border px-3 py-2">
-            <option value="ECONOMICA">Economica</option>
+          <select formControlName="rango"
+                  class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="ECONOMICA">Económica</option>
             <option value="STANDARD">Standard</option>
             <option value="LUJO">Lujo</option>
           </select>
         </div>
 
+        <!-- Precio Noche -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Precio por noche (S/)</label>
-          <input type="number" formControlName="precioPorNoche" class="mt-1 w-full rounded-lg border px-3 py-2"
+          <input type="number" formControlName="precioPorNoche"
+                 class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                  min="0" step="0.01" placeholder="320.00" />
         </div>
 
+        <!-- Precio Hora -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Precio por hora (S/)</label>
-          <input type="number" formControlName="precioPorHora" class="mt-1 w-full rounded-lg border px-3 py-2"
+          <input type="number" formControlName="precioPorHora"
+                 class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                  min="0" step="0.01" placeholder="60.00" />
         </div>
 
+        <!-- Detalles -->
         <div class="md:col-span-3">
           <label class="block text-sm font-medium text-gray-700">Detalles</label>
           <textarea formControlName="detalles" rows="3"
-                    class="mt-1 w-full rounded-lg border px-3 py-2"
-                    placeholder="Suite con vista al mar y jacuzzi"></textarea>
+                    class="mt-1 w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Suite con vista al mar y jacuzzi, incluye desayuno buffet..."></textarea>
         </div>
       </div>
 
-      <div class="pt-2 flex items-center justify-end gap-2">
-        <button type="button" (click)="closeCreateModal()"
-                class="px-4 py-2 rounded-lg ring-1 ring-gray-300 hover:bg-gray-50">
-          Cancelar
-        </button>
-        <button type="submit" [disabled]="createForm.invalid || saving"
-                class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">
-          {{ saving ? 'Guardando…' : 'Crear habitación' }}
-        </button>
+      <!-- Footer -->
+      <div class="pt-4 flex items-center justify-between gap-2 border-t">
+        <span class="text-xs text-gray-400">
+          {{ isEditMode ? 'Editando una habitación existente' : 'Creando una nueva habitación' }}
+        </span>
+
+        <div class="flex gap-2">
+          <button type="button" (click)="closeCreateModal()"
+                  class="px-4 py-2 rounded-lg ring-1 ring-gray-300 hover:bg-gray-50 text-sm font-medium">
+            Cancelar
+          </button>
+          <button type="submit"
+                  [disabled]="createForm.invalid || saving"
+                  class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700
+                         disabled:opacity-60 text-sm font-semibold flex items-center gap-2">
+            <span *ngIf="!saving">
+              {{ isEditMode ? 'Guardar cambios' : 'Crear habitación' }}
+            </span>
+            <span *ngIf="saving" class="flex items-center gap-2">
+              <span class="h-4 w-4 border-2 border-white border-b-transparent rounded-full animate-spin"></span>
+              {{ isEditMode ? 'Guardando…' : 'Guardando…' }}
+            </span>
+          </button>
+        </div>
       </div>
     </form>
   </div>
 </div>
+
 <div class="min-h-screen bg-gray-50 flex flex-col items-center py-12">
   
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl w-full px-6">
