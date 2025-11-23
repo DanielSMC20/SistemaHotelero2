@@ -33,6 +33,7 @@ export class HotelService {
     });
   }
 
+
   createRoom(body: any): Observable<Room> {
     return this.http.post<Room>(`${this.API}/rooms`, body, { headers: this.headers() });
   }

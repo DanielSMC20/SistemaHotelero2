@@ -30,12 +30,14 @@ export class ReportsComponent implements OnInit {
     { field: 'checkOut', headerName: 'Check-out', flex: 1 },
     { field: 'paymentMethod', headerName: 'Método de pago', flex: 1 },
     { field: 'price', headerName: 'Precio (S/)', flex: 1 },
+    { field: '', headerName: 'Atendido por', flex: 1 },
   ];
 
   constructor(private reportInfra: ReportInfrastructure) {}
 
   ngOnInit(): void {
     this.loadReport();
+
   }
 
   onGridReady(params: any) {
@@ -47,18 +49,22 @@ export class ReportsComponent implements OnInit {
     const end = this.selectedDate; // Mismo día (reporte diario)
 
     this.reportInfra.getRevenue(start, end).subscribe({
-      next: (data: any) => {
-        this.rowData = data.map((x: any) => ({
-          roomNumber: x.roomNumber ?? x.habitacion ?? '-',
-          guestName: x.guestName ?? x.nombres ?? '-',
-          dni: x.dni ?? x.documento ?? '-',
-          checkIn: x.checkIn ?? x.fechaCheckIn ?? '-',
-          checkOut: x.checkOut ?? x.fechaCheckOut ?? '-',
-          paymentMethod: x.paymentMethod ?? x.metodoPago ?? '-',
-          price: x.price ?? x.precio ?? 0,
-        }));
-        this.calculateTotal();
-      },
+      next: (res: any) => {
+  console.log("RESPONSE:", res);
+
+  this.rowData = res.data.map((x: any) => ({
+    roomNumber: x.roomNumber ?? x.habitacion ?? '-',
+    guestName: x.guestName ?? x.nombres ?? '-',
+    dni: x.dni ?? x.documento ?? '-',
+    checkIn: x.checkIn ?? x.fechaCheckIn ?? '-',
+    checkOut: x.checkOut ?? x.fechaCheckOut ?? '-',
+    paymentMethod: x.paymentMethod ?? x.metodoPago ?? '-',
+    price: x.price ?? x.precio ?? 0,
+  }));
+
+  this.calculateTotal();
+},
+
       error: (err) => {
         console.error('Error al cargar reporte', err);
       },
@@ -79,4 +85,8 @@ export class ReportsComponent implements OnInit {
     const fileName = `Reporte_${this.selectedDate}.xlsx`;
     saveAs(blob, fileName);
   }
+
+
+
+
 }

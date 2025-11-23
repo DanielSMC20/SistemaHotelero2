@@ -38,6 +38,7 @@ export class RoomListComponent implements OnInit {
   opening: boolean | undefined;
   saving: any;
   actionLoading: any;
+  
   setView(v: RoomView) {
     this.view = v;
   }
@@ -54,6 +55,7 @@ export class RoomListComponent implements OnInit {
   ocupadas = 0;
   mantenimiento = 0;
   porcentajeOcupacion = 0;
+  
   constructor(private fb: FormBuilder, private hotelService: HotelService) {}
 
   get isEditMode(): boolean {
@@ -77,6 +79,7 @@ export class RoomListComponent implements OnInit {
     this.showCreate = true;
     document.body.style.overflow = 'hidden';
   }
+  
   closeCreateModal() {
     this.showCreate = false;
     this.editingRoom = null;
@@ -93,6 +96,7 @@ export class RoomListComponent implements OnInit {
       detalles: '',
     });
   }
+  
   private buildCreateForm() {
     this.createForm = this.fb.group({
       numero: ['', [Validators.required, Validators.maxLength(10)]],
@@ -141,6 +145,7 @@ export class RoomListComponent implements OnInit {
       },
     });
   }
+  
   async saveRoom() {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
@@ -203,7 +208,6 @@ export class RoomListComponent implements OnInit {
   openRoom(r: Room) {
     this.selected = r;
     this.opening = true;
-    // opcional: bloquear scroll de fondo
     document.body.style.overflow = 'hidden';
     setTimeout(() => (this.opening = false), 150);
   }
@@ -346,7 +350,6 @@ async markMaintenance(r: Room) {
     }
   }
 
-  // ✅ Traducciones para mostrar en español
   translateType(type: string): string {
     switch (type) {
       case 'standard':
