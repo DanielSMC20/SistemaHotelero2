@@ -144,7 +144,6 @@ procesarPago(event: { monto: number; metodo: string }) {
     next: (res: any) => {
       console.log('Respuesta de recordPayment:', res);
 
-      // 🔴 IMPORTANTE: el id viene en res.data.id, no en res.id
       const paymentId = res?.data?.id;
       console.log('paymentId =', paymentId);
 

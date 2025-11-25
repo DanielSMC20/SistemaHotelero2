@@ -19,7 +19,6 @@ export class CheckoutListComponent implements OnInit {
 
   onDoCheckOut(r: Reserva){
     this.api.checkOut(r.id).subscribe({ next: _ => {
-      // si quieres mostrar factura aquí, puedes llamar a invoices
       this.api.getAllReservations().subscribe(d => this.reservas = d);
     }});
   }

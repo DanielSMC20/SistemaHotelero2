@@ -50,6 +50,20 @@ export class ReservationFormComponent implements OnInit {
   );
 
   form!: FormGroup;
+  phoneFilter = '';
+
+  get filteredPhoneCodes() {
+  if (!this.phoneFilter?.trim()) {
+    return this.phoneCodes;
+  }
+
+  const term = this.phoneFilter.toLowerCase();
+
+  return this.phoneCodes.filter(c =>
+    c.code.toLowerCase().includes(term) ||     // +51
+    c.label.toLowerCase().includes(term)    // Perú
+  );
+}
 
   phoneCodes: PhoneCodeUI[] = [];
 
@@ -578,32 +592,56 @@ private checkOutNotBeforeCheckIn = (
           });
         },
 
-        error: (err) => {
-          const backendMsg =
-            err?.error?.message ||
-            err?.error ||
-            'No se pudo crear la reserva';
+error: (err) => {
+  const raw =
+    err?.error?.message ||
+    err?.error ||
+    'No se pudo crear la reserva';
 
-          console.error('Error en reserva:', backendMsg);
+  const backendMsg = String(raw);
+  console.error('Error en reserva:', backendMsg);
 
-          if (
-            backendMsg.includes('rango de fechas') ||
-            backendMsg.includes('disponible') ||
-            backendMsg.includes('solapad')
-          ) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Habitación no disponible',
-              text: backendMsg,
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: backendMsg,
-            });
-          }
-        },
+  let userMessage = backendMsg;
+  let title = 'Error';
+
+  const msgLower = backendMsg.toLowerCase();
+
+  // 👉 Correo duplicado (constraint: clientes.uk_clientes_email)
+  if (msgLower.includes('uk_clientes_email')) {
+    title = 'Correo ya registrado';
+    userMessage = 'El correo electrónico ya ha sido registrado para otro cliente.';
+
+    // Opcional: marcar el campo email como inválido
+    this.form.get('email')?.setErrors({ duplicate: true });
+  }
+
+  // 👉 Teléfono duplicado (constraint: clientes.uk_clientes_tel_compuesto)
+  else if (msgLower.includes('uk_clientes_tel_compuesto')) {
+    title = 'Teléfono ya registrado';
+    userMessage = 'El número de celular ya ha sido registrado para otro cliente.';
+
+    // Opcional: marcar el campo teléfono como inválido
+    this.form.get('telefono')?.setErrors({ duplicate: true });
+  }
+
+  // 👉 Disponibilidad / solapamiento de fechas (lo que ya manejabas)
+  else if (
+    msgLower.includes('rango de fechas') ||
+    msgLower.includes('disponible') ||
+    msgLower.includes('solapad')
+  ) {
+    title = 'Habitación no disponible';
+    userMessage = backendMsg;
+  }
+
+  Swal.fire({
+    icon: 'error',
+    title,
+    text: userMessage,
+  });
+},
+
+
       });
   }
 

@@ -181,15 +181,29 @@
               >Teléfono</label
             >
             <div class="flex gap-2">
-              <select
-                formControlName="phoneCountryCode"
-                class="rounded-xl border border-gray-300 px-3 py-2 w-40"
-              >
-                <option *ngIf="loadingCodes" disabled>Cargando…</option>
-                <option *ngFor="let c of phoneCodes" [value]="c.code">
-                  {{ c.code }}, {{ c.label }}
-                </option>
-              </select>
+<div class="w-44 space-y-1">
+  <!-- 🔍 Input de búsqueda -->
+  <input
+    type="text"
+    class="w-full rounded-xl border border-gray-300 px-3 py-1 text-xs focus:ring-2 focus:ring-indigo-500"
+    placeholder="Buscar país o código..."
+    (input)="phoneFilter = $any($event.target).value"
+  />
+
+  <!-- 📱 Select filtrado -->
+  <select
+    formControlName="phoneCountryCode"
+    class="w-full rounded-xl border border-gray-300 px-3 py-2 mt-1"
+  >
+    <option *ngIf="loadingCodes" disabled>Cargando…</option>
+    <option *ngFor="let c of filteredPhoneCodes" [value]="c.code">
+      {{ c.code }} — {{ c.label }}
+    </option>
+    <option *ngIf="!loadingCodes && filteredPhoneCodes.length === 0" disabled>
+      Sin resultados
+    </option>
+  </select>
+</div>
 
               <input
                 formControlName="telefono"
