@@ -170,23 +170,7 @@ export class ReservationListComponent implements OnInit {
         }">${label[s] ?? params.value ?? '—'}</span>`;
       },
     },
-{
-  headerName: 'Acciones',
-  width: 160,
-  sortable: false,
-  filter: false,
-  pinned: 'right',
-  cellRenderer: (params: any) => {
-    const btn = document.createElement('button');
-    btn.textContent = 'Opciones';
-    btn.className = 'bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-1.5 px-3 rounded-lg';
-    btn.addEventListener('click', () =>
-      params.context.componentParent.openRowActions(params.data)
-    );
-    return btn;
-  },
-  cellClass: 'text-center',
-},
+
   ];
 
   // =============== GridOptions ===============

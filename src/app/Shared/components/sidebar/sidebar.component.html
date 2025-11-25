@@ -107,6 +107,24 @@
         </a>
       </li>
 
+    <li *appHasRol="['ADMIN','GERENCIA']"
+    routerLinkActive="!bg-gradient-to-tr !from-blue-600 !to-blue-400 !text-white !shadow-md">
+
+  <a routerLink="user" (click)="closeSidebar()">
+    <button class="text-xs py-3 rounded-lg w-full flex items-center gap-4 px-4 capitalize text-white hover:bg-white/10 transition-all duration-300">
+      
+      <!-- ICONO DE GESTIÓN DE USUARIOS -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+        <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/>
+      </svg>
+
+      <p class="text-base font-medium">Gestión de Usuarios</p>
+    </button>
+  </a>
+
+</li>
+
+
     </ul>
   </div>
 </aside>
