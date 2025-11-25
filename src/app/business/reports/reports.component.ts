@@ -28,9 +28,8 @@ export class ReportsComponent implements OnInit {
     { field: 'dni', headerName: 'DNI/RUC', flex: 1 },
     { field: 'checkIn', headerName: 'Check-in', flex: 1 },
     { field: 'checkOut', headerName: 'Check-out', flex: 1 },
-    { field: 'paymentMethod', headerName: 'Método de pago', flex: 1 },
     { field: 'price', headerName: 'Precio (S/)', flex: 1 },
-    { field: '', headerName: 'Atendido por', flex: 1 },
+    { field: 'usuarioRegistro', headerName: 'Atendido por', flex: 1 },
   ];
 
   constructor(private reportInfra: ReportInfrastructure) {}
@@ -60,6 +59,7 @@ export class ReportsComponent implements OnInit {
     checkOut: x.checkOut ?? x.fechaCheckOut ?? '-',
     paymentMethod: x.paymentMethod ?? x.metodoPago ?? '-',
     price: x.price ?? x.precio ?? 0,
+    usuarioRegistro: x.usuarioRegistro ?? x.usuarioRegistro ?? '-',
   }));
 
   this.calculateTotal();

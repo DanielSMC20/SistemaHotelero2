@@ -285,7 +285,7 @@ async markMaintenance(r: Room) {
     this.updateStats();
 
     Swal.fire({
-      icon: 'warning',
+      icon: 'success',
       title: '¡Actualizado!',
       text: `La habitación ${r.number} está en mantenimiento.`,
       timer: 2000,

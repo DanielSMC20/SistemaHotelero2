@@ -11,6 +11,7 @@ import { ReportsComponent } from './business/reports/reports.component';
 
 import { AuthGuard } from './core/guards/auth.guard';
 import { CheckCenterComponent } from './business/checkin-checkout/shared/checkCenterComponent';
+import { UserManagementComponent } from './business/user-management/user-management.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -40,6 +41,7 @@ export const routes: Routes = [
       { path: 'reservations', component: ReservationListComponent },
       { path: 'guests', component: GuestListComponent },
       { path: 'reports', component: ReportsComponent },
+      { path: 'user', component: UserManagementComponent },
       { path: 'checkin', component: CheckCenterComponent },
 
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
