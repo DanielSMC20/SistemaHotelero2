@@ -1,23 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import Swal from 'sweetalert2';
-import { GuestApplication } from '../../application/guests.application.ts';
+import { PhoneCodeApi, PhoneCodeUI } from '../../../../core/models/models';
 import { Guest } from '../../domain/guests.interface';
+import { GuestApplication } from '../../application/guests.application.ts';
 import { GuestsInfraestructure } from '../../infraestructure/guests.infraestructure';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// 👇 Interface local para los códigos de país
+
+
 @Component({
   selector: 'app-guest-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, AgGridAngular],
+  imports: [CommonModule, RouterModule, AgGridAngular, FormsModule],
   templateUrl: './guest-list.component.html',
   styleUrls: ['./guest-list.component.css'],
 })
 export class GuestListComponent implements OnInit {
+
   guests: Guest[] = [];
   rowData: Guest[] = [];
   p: any;
@@ -25,7 +32,32 @@ export class GuestListComponent implements OnInit {
   gridApi: any;
   gridColumnApi: any;
 
-  // 🔹 Definición de columnas con formatos y ancho mínimo
+  // 🔹 Códigos de país
+  phoneCodes: PhoneCodeApi[] = [];
+  loadingCodes = false;
+
+  // 🔹 Estado del modal de registro
+  showRegisterModal = false;
+
+  registerForm: {
+    tipoPersona: 'NATURAL' | 'JURIDICA';
+    documento: string;
+    nombresCompletos: string;
+    razonSocial: string;
+    telefono: string;
+    email: string;
+    phoneCountryCode: string;
+  } = {
+    tipoPersona: 'NATURAL',
+    documento: '',
+    nombresCompletos: '',
+    razonSocial: '',
+    telefono: '',
+    email: '',
+    phoneCountryCode: '+51',
+  };
+
+  // 🔹 Definición de columnas
   columnDefs: ColDef<Guest>[] = [
     {
       headerName: 'ID',
@@ -38,22 +70,24 @@ export class GuestListComponent implements OnInit {
       headerName: 'Nombres y apellidos',
       field: 'nombresCompletos',
       minWidth: 260,
-      cellRenderer: (p: { value: any; data: { documento: any; }; }) => `
+      cellRenderer: (p: any) => `
         <div class="flex items-center gap-3">
-          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-700 font-semibold">${(p.value || '?').charAt(0)}</div>
+          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-700 font-semibold">
+            ${(p.value || '?').charAt(0)}
+          </div>
           <div class="leading-tight">
             <div class="font-medium text-gray-900">${p.value || '—'}</div>
           </div>
         </div>
       `
     },
-    { headerName: 'DNI', field: 'documento', maxWidth: 160 },
+    { headerName: 'DNI / RUC', field: 'documento', maxWidth: 160 },
     { headerName: 'Teléfono', field: 'telefono', maxWidth: 180 },
     {
       headerName: 'Email',
       field: 'email',
       minWidth: 260,
-      cellRenderer: (p: { value: any; }) =>
+      cellRenderer: (p: any) =>
         p.value
           ? `<a class="text-blue-600 hover:underline" href="mailto:${p.value}">${p.value}</a>`
           : '—'
@@ -71,7 +105,9 @@ export class GuestListComponent implements OnInit {
         const editBtn = document.createElement('button');
         editBtn.innerHTML = `
           <span class="inline-flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-1 0v14m7-7H5"/></svg>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-1 0v14m7-7H5"/>
+            </svg>
             Editar
           </span>`;
         editBtn.className =
@@ -81,7 +117,10 @@ export class GuestListComponent implements OnInit {
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = `
           <span class="inline-flex items-center gap-1">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2"/>
+            </svg>
             Eliminar
           </span>`;
         deleteBtn.className =
@@ -96,7 +135,6 @@ export class GuestListComponent implements OnInit {
     },
   ];
 
-  // 🔹 GridOptions con paginación, filtros flotantes y estados
   gridOptions = {
     context: { componentParent: this },
     rowHeight: 56,
@@ -116,7 +154,7 @@ export class GuestListComponent implements OnInit {
       '<div class="text-gray-500">No hay datos para mostrar</div>',
     overlayLoadingTemplate:
       '<div class="text-gray-500">Cargando…</div>',
-    getRowId: (params: any) => params.data.documento, // clave única
+    getRowId: (params: any) => params.data.documento,
   };
 
   constructor(
@@ -126,25 +164,7 @@ export class GuestListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadGuests();
-  }
-
-  onGridReady(params: any) {
-    this.gridApi = params.api;
-    this.gridColumnApi = params.columnApi;
-  }
-
-  // 🔹 Búsqueda global
-  onQuickFilter(ev: Event) {
-    const val = (ev.target as HTMLInputElement).value ?? '';
-    this.gridApi?.setQuickFilter(val);
-  }
-
-  // 🔹 Exportar CSV
-  exportarCSV() {
-    this.gridApi?.exportDataAsCsv({
-      fileName: 'huespedes.csv',
-      processCellCallback: (p: any) => (p.value ?? '').toString(),
-    });
+    this.loadPhoneCodes();
   }
 
   private loadGuests(): void {
@@ -155,6 +175,213 @@ export class GuestListComponent implements OnInit {
       error: (err) => console.error('Error al cargar huéspedes:', err),
     });
   }
+
+  private loadPhoneCodes(): void {
+    this.loadingCodes = true;
+    this.guestsInfraestructure.getPhoneCodes().subscribe({
+      next: (res) => {
+        this.phoneCodes = res;
+        this.loadingCodes = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar códigos de país', err);
+        this.loadingCodes = false;
+      }
+    });
+  }
+
+  onGridReady(params: any) {
+    this.gridApi = params.api;
+    this.gridColumnApi = params.columnApi;
+  }
+
+  onQuickFilter(ev: Event) {
+    const val = (ev.target as HTMLInputElement).value ?? '';
+    this.gridApi?.setQuickFilter(val);
+  }
+
+  exportarCSV() {
+    this.gridApi?.exportDataAsCsv({
+      fileName: 'huespedes.csv',
+      processCellCallback: (p: any) => (p.value ?? '').toString(),
+    });
+  }
+
+  // =======================
+  // Modal registro
+  // =======================
+
+  openRegisterModal() {
+    this.registerForm = {
+      tipoPersona: 'NATURAL',
+      documento: '',
+      nombresCompletos: '',
+      razonSocial: '',
+      telefono: '',
+      email: '',
+      phoneCountryCode: this.phoneCodes.length > 0 ? this.phoneCodes[0].dialCode : '+51'
+    };
+    this.showRegisterModal = true;
+  }
+
+  closeRegisterModal() {
+    this.showRegisterModal = false;
+  }
+
+  setTipoPersona(tipo: 'NATURAL' | 'JURIDICA') {
+    this.registerForm.tipoPersona = tipo;
+    this.registerForm.documento = '';
+    this.registerForm.nombresCompletos = '';
+    this.registerForm.razonSocial = '';
+  }
+
+onLookupDni() {
+  const dni = this.registerForm.documento.trim();
+  if (!/^\d{8}$/.test(dni)) {
+    alert('El DNI debe tener 8 dígitos');
+    return;
+  }
+
+  this.guestsInfraestructure.lookupDni(dni).subscribe({
+    next: (resp: any) => {
+      // A veces la API viene como { data: {...} } o directo
+      const data = resp.data ?? resp;
+
+      // De tu screenshot:
+      // document_number, first_last_name, second_last_name, first_name, full_name
+      const fullName =
+        data.full_name ||
+        `${data.first_last_name ?? ''} ${data.second_last_name ?? ''} ${data.first_name ?? ''}`.trim();
+
+      if (fullName) {
+        this.registerForm.nombresCompletos = fullName;
+      }
+
+      if (data.document_number) {
+        this.registerForm.documento = data.document_number;
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      alert('No se pudo obtener datos desde RENIEC');
+    },
+  });
+}
+
+onLookupRuc() {
+  const ruc = this.registerForm.documento.trim();
+  if (!/^\d{11}$/.test(ruc)) {
+    alert('El RUC debe tener 11 dígitos');
+    return;
+  }
+
+  this.guestsInfraestructure.lookupRuc(ruc).subscribe({
+    next: (resp: any) => {
+      // Igual, puede venir como { data: {...} } o plano
+      const data = resp.data ?? resp;
+
+      // De tu screenshot:
+      // razon_social, numero_documento, estado, condicion, etc.
+      const razon =
+        data.razon_social ||
+        data.nombre_o_razon_social ||
+        data.nombre ||
+        '';
+
+      if (razon) {
+        this.registerForm.razonSocial = razon;
+      }
+
+      if (data.numero_documento) {
+        this.registerForm.documento = data.numero_documento;
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      alert('No se pudo obtener datos desde SUNAT');
+    },
+  });
+}
+
+  submitRegister() {
+    const f = this.registerForm;
+
+    // ===== VALIDACIONES BÁSICAS =====
+    if (!f.telefono || !f.email || !f.documento) {
+      alert('Documento, teléfono y email son obligatorios');
+      return;
+    }
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email)) {
+      alert('El email no es válido');
+      return;
+    }
+
+    if (!/^\d{6,12}$/.test(f.telefono)) {
+      alert('El teléfono debe tener entre 6 y 12 dígitos');
+      return;
+    }
+
+    if (f.tipoPersona === 'NATURAL') {
+      if (!/^\d{8}$/.test(f.documento)) {
+        alert('El DNI debe tener 8 dígitos');
+        return;
+      }
+      if (!f.nombresCompletos.trim()) {
+        alert('El nombre completo es obligatorio para persona natural');
+        return;
+      }
+    } else {
+      if (!/^\d{11}$/.test(f.documento)) {
+        alert('El RUC debe tener 11 dígitos');
+        return;
+      }
+      if (!f.razonSocial.trim()) {
+        alert('La razón social es obligatoria para empresa');
+        return;
+      }
+    }
+
+    // ===== DTO que espera CustomerUpsertRequest =====
+    const payload: any = {
+      documento: f.documento,
+      tipoDocumento: f.tipoPersona === 'NATURAL' ? 'DNI' : 'RUC',
+      nombresCompletos:
+        f.tipoPersona === 'NATURAL'
+          ? f.nombresCompletos
+          : f.razonSocial,
+      email: f.email,
+      phoneCountryCode: f.phoneCountryCode || '+51',
+      telefono: f.telefono,
+      telefonoE164: null,
+    };
+
+    this.guestsInfraestructure.createGuest(payload).subscribe({
+      next: (created: any) => {
+        const displayName =
+          created.nombresCompletos ?? created.razonSocial ?? '—';
+
+        const nuevoGuest: Guest = {
+          id: created.id,
+          nombresCompletos: displayName,
+          email: created.email,
+          telefono: created.telefono,
+          documento: created.documento,
+        };
+
+        this.gridApi?.applyTransaction({ add: [nuevoGuest] });
+        this.closeRegisterModal();
+      },
+      error: (err) => {
+        console.error(err);
+        alert(err.error?.message || 'No se pudo registrar el cliente');
+      },
+    });
+  }
+
+  // =======================
+  // Editar / eliminar
+  // =======================
 
   editar(guest: Guest) {
     Swal.fire({
@@ -172,8 +399,8 @@ export class GuestListComponent implements OnInit {
         <label><strong>Nombre completo</strong></label>
         <input id="nombre" class="swal2-input" placeholder="Nombre" value="${guest.nombresCompletos}" style="width:100%">
 
-        <label><strong>DNI</strong></label>
-        <input id="dni" class="swal2-input" placeholder="DNI" value="${guest.documento}" style="width:100%">
+        <label><strong>DNI / RUC</strong></label>
+        <input id="dni" class="swal2-input" placeholder="Documento" value="${guest.documento}" style="width:100%">
 
         <label><strong>Teléfono</strong></label>
         <input id="telefono" class="swal2-input" placeholder="Teléfono" value="${guest.telefono}" style="width:100%">
@@ -207,10 +434,7 @@ export class GuestListComponent implements OnInit {
 
         this.guestsInfraestructure.getEditGuest(guest.documento, updatedGuest).subscribe({
           next: () => {
-            // Actualiza solo en memoria
-          this.gridApi.applyTransaction({ update: [updatedGuest] });
-
-
+            this.gridApi.applyTransaction({ update: [updatedGuest] });
             Swal.fire({
               icon: 'success',
               title: '¡Actualizado!',
@@ -228,80 +452,25 @@ export class GuestListComponent implements OnInit {
             });
           },
         });
-
       }
     });
-
   }
 
-  
-
-  registrar() {
+  eliminar(guest: Guest) {
     Swal.fire({
-      title: 'Registrar nuevo huésped',
-      width: 600,
-      padding: '2em',
-      color: '#333',
-      background: '#fff',
+      title: '¿Eliminar huésped?',
+      text: `Se eliminará a ${guest.nombresCompletos}`,
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Guardar',
+      confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
-      focusConfirm: false,
-      html: `
-      <div style="display:flex; flex-direction:column; gap:10px; text-align:left">
-        <label><strong>Nombre completo</strong></label>
-        <input id="nombre" class="swal2-input" placeholder="Nombre completo" style="width:100%">
+    }).then((res) => {
+      if (res.isConfirmed) {
+        // this.guestsInfraestructure.deleteGuest(guest.documento).subscribe(...)
 
-        <label><strong>DNI</strong></label>
-        <input id="dni" class="swal2-input" placeholder="DNI" maxlength="8" style="width:100%">
-
-        <label><strong>Teléfono</strong></label>
-        <input id="telefono" class="swal2-input" placeholder="Teléfono" style="width:100%">
-
-        <label><strong>Email</strong></label>
-        <input id="email" class="swal2-input" placeholder="Correo electrónico" style="width:100%">
-      </div>
-    `,
-      preConfirm: () => {
-        const nombre = (document.getElementById('nombre') as HTMLInputElement).value.trim();
-        const dni = (document.getElementById('dni') as HTMLInputElement).value.trim();
-        const telefono = (document.getElementById('telefono') as HTMLInputElement).value.trim();
-        const email = (document.getElementById('email') as HTMLInputElement).value.trim();
-
-        if (!nombre || !dni || !telefono || !email) {
-          Swal.showValidationMessage('⚠️ Todos los campos son obligatorios');
-          return;
-        }
-
-        // Validaciones simples
-        if (!/^\d{8}$/.test(dni)) {
-          Swal.showValidationMessage('⚠️ El DNI debe tener 8 dígitos');
-          return;
-        }
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          Swal.showValidationMessage('⚠️ El email no es válido');
-          return;
-        }
-
-        return { nombre, dni, telefono, email };
-      },
-    }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        const nuevoHuesped = result.value;
-
-        // 👉 Aquí podrías llamar a tu servicio:
-        // this.guestsService.createGuest(nuevoHuesped).subscribe(() => { ... });
-
-        Swal.fire({
-          icon: 'success',
-          title: '¡Registrado!',
-          text: 'El huésped fue agregado correctamente.',
-          showConfirmButton: false,
-          timer: 1500,
-        });
+        this.gridApi.applyTransaction({ remove: [guest] });
+        Swal.fire('Eliminado', 'El huésped fue eliminado.', 'success');
       }
     });
   }
-
-
 }

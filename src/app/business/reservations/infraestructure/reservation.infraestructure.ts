@@ -13,8 +13,6 @@ import { PhoneCodeApi, PhoneCodeUI } from '../../../core/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationInfraestructure {
-  // Base API (asegúrate en environment.ts):
-  // export const environment = { production:false, API_URL:'http://localhost:8080' };
   private readonly API = environment.API_URL;
 
   private readonly RES_URL = `${this.API}/reservations`;

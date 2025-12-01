@@ -1,8 +1,7 @@
 <div class="max-w-7xl mx-auto p-6 space-y-6">
-  <!-- Breadcrumb + Header -->
+  <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
-     
       <h1 class="text-3xl font-semibold text-gray-900 tracking-tight">
         Gestión de Huéspedes
       </h1>
@@ -12,11 +11,15 @@
     <div class="flex items-center gap-3">
       <button (click)="exportarCSV()"
         class="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 10l5 5m0 0l5-5m-5 5V3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 15v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 10l5 5m0 0l5-5m-5 5V3"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 15v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4"/>
+        </svg>
         Exportar CSV
       </button>
 
-      <button (click)="registrar()"
+      <!-- 🔹 Abre el popup (no SweetAlert) -->
+      <button (click)="openRegisterModal()"
         class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -43,7 +46,9 @@
     <div class="flex items-center gap-2 text-xs text-gray-500">
       <span class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1">
         Filtrar en columnas
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M10 18h4v-2h-4v2Zm-7-12v2h18V6H3Zm3 7h12v-2H6v2Z"/></svg>
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 18h4v-2h-4v2Zm-7-12v2h18V6H3Zm3 7h12v-2H6v2Z"/>
+        </svg>
       </span>
       <span class="hidden md:inline">Usa los filtros de cabecera para refinar resultados</span>
     </div>
@@ -51,7 +56,6 @@
 
   <!-- Card contenedor -->
   <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
-    <!-- Grid -->
     <ag-grid-angular
       style="width: 100%; height: 560px;"
       class="ag-theme-quartz"
@@ -60,5 +64,183 @@
       [gridOptions]="gridOptions"
       (gridReady)="onGridReady($event)">
     </ag-grid-angular>
+  </div>
+</div>
+
+<!-- 🔹 MODAL REGISTRO (popup bonito) -->
+<div
+  *ngIf="showRegisterModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+>
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+    <!-- Header modal -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Registrar nuevo cliente</h2>
+      <button
+        type="button"
+        (click)="closeRegisterModal()"
+        class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+      >
+        ×
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form class="flex-1 overflow-y-auto px-6 py-4 space-y-4" (ngSubmit)="submitRegister()">
+
+      <!-- Tipo de cliente -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de cliente</label>
+        <div class="inline-flex rounded-full bg-gray-100 p-1">
+          <button
+            type="button"
+            (click)="setTipoPersona('NATURAL')"
+            class="px-4 py-1 text-xs font-semibold rounded-full"
+            [ngClass]="registerForm.tipoPersona === 'NATURAL'
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'"
+          >
+            Persona Natural
+          </button>
+          <button
+            type="button"
+            (click)="setTipoPersona('JURIDICA')"
+            class="px-4 py-1 text-xs font-semibold rounded-full"
+            [ngClass]="registerForm.tipoPersona === 'JURIDICA'
+              ? 'bg-white text-blue-700 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'"
+          >
+            Empresa
+          </button>
+        </div>
+      </div>
+
+      <!-- Persona Natural -->
+      <div *ngIf="registerForm.tipoPersona === 'NATURAL'" class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">DNI</label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              maxlength="8"
+              [(ngModel)]="registerForm.documento"
+              name="dni"
+              class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+              placeholder="DNI"
+            />
+            <button
+              type="button"
+              (click)="onLookupDni()"
+              class="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+            >
+              RENIEC
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+          <input
+            type="text"
+            [(ngModel)]="registerForm.nombresCompletos"
+            name="nombresCompletos"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+            placeholder="Nombre completo"
+          />
+        </div>
+      </div>
+
+      <!-- Empresa -->
+      <div *ngIf="registerForm.tipoPersona === 'JURIDICA'" class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">RUC</label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              maxlength="11"
+              [(ngModel)]="registerForm.documento"
+              name="ruc"
+              class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+              placeholder="RUC"
+            />
+            <button
+              type="button"
+              (click)="onLookupRuc()"
+              class="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+            >
+              SUNAT
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Razón social</label>
+          <input
+            type="text"
+            [(ngModel)]="registerForm.razonSocial"
+            name="razonSocial"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+            placeholder="Nombre de la empresa"
+          />
+        </div>
+      </div>
+
+      <!-- Teléfono + código país -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+        <div class="flex gap-2">
+          <select
+            [(ngModel)]="registerForm.phoneCountryCode"
+            name="phoneCountryCode"
+            class="w-32 rounded-lg border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+          >
+            <option *ngFor="let code of phoneCodes" [value]="code.dialCode">
+              {{ code.flag }} {{ code.country }} ({{ code.dialCode }})
+            </option>
+          </select>
+
+          <input
+            type="text"
+            [(ngModel)]="registerForm.telefono"
+            name="telefono"
+            class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+            placeholder="Número de teléfono"
+          />
+        </div>
+        <p *ngIf="loadingCodes" class="mt-1 text-xs text-gray-400">
+          Cargando códigos de país...
+        </p>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input
+          type="email"
+          [(ngModel)]="registerForm.email"
+          name="email"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+          placeholder="Correo electrónico"
+        />
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+      <button
+        type="button"
+        (click)="closeRegisterModal()"
+        class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="submitRegister()"
+        class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+      >
+        Guardar
+      </button>
+    </div>
   </div>
 </div>
